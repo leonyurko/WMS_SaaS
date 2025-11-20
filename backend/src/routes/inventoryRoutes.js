@@ -1,0 +1,52 @@
+const express = require('express');
+const router = express.Router();
+const inventoryController = require('../controllers/inventoryController');
+const { authenticateToken, requireManagerOrAdmin, requireAdmin } = require('../middleware/auth');
+const { validateRequest, schemas } = require('../middleware/validation');
+const { generateBarcodeMiddleware } = require('../middleware/barcode');
+const { uploadSingleImage, uploadMultipleImages, processImageUpload, processMultipleImageUpload } = require('../middleware/upload');
+
+// All routes require authentication
+router.use(authenticateToken);
+
+// Get all inventory (all authenticated users)
+router.get('/', inventoryController.getAllInventory);
+
+// Get inventory by barcode (all authenticated users)
+router.get('/barcode/:code', inventoryController.getInventoryByBarcode);
+
+// Get inventory by ID (all authenticated users)
+router.get('/:id', inventoryController.getInventoryById);
+
+// Create inventory (Manager/Admin only)
+router.post(
+  '/',
+  requireManagerOrAdmin,
+  uploadMultipleImages,
+  processMultipleImageUpload,
+  validateRequest(schemas.createInventory),
+  generateBarcodeMiddleware,
+  inventoryController.createInventory
+);
+
+// Update inventory (Manager/Admin only)
+router.put(
+  '/:id',
+  requireManagerOrAdmin,
+  uploadMultipleImages,
+  processMultipleImageUpload,
+  validateRequest(schemas.updateInventory),
+  inventoryController.updateInventory
+);
+
+// Delete inventory (Admin only)
+router.delete('/:id', requireAdmin, inventoryController.deleteInventory);
+
+// Update stock (all authenticated users)
+router.post(
+  '/:id/stock',
+  validateRequest(schemas.updateStock),
+  inventoryController.updateStock
+);
+
+module.exports = router;
