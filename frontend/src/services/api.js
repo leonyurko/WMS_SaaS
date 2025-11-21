@@ -5,10 +5,8 @@ const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  // If no env var, try to guess based on current hostname
-  // This allows accessing from other devices on the network
-  const hostname = window.location.hostname;
-  return `http://${hostname}:5000/api`;
+  // Use relative path to go through nginx proxy
+  return '/api';
 };
 
 const baseURL = getBaseUrl();
