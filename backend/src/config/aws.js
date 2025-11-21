@@ -60,20 +60,9 @@ const uploadToS3 = async (fileBuffer, fileName, mimeType) => {
       
       fs.writeFileSync(filePath, fileBuffer);
       
-      // Return relative URL
-      // Assuming server is running on localhost:5000 or similar
-      // The frontend should handle the base URL or we return a full URL if we knew the host
-      // For now, returning a relative path that the frontend can prepend API_URL to, 
-      // OR better yet, return a path that the backend serves.
-      // Since we added app.use('/uploads', ...), the URL is /uploads/filename
-      
-      // Note: If the frontend expects a full URL, it might break. 
-      // But usually src="/uploads/..." works if on same domain or proxy.
-      // Since frontend is on 3000 and backend on 5000, we might need the full URL.
-      // Let's try to return a relative path and see if frontend handles it.
-      // Actually, let's return the full URL assuming localhost for dev
-      const baseUrl = process.env.API_URL || 'http://localhost:5000';
-      return `${baseUrl}/uploads/${uniqueFileName}`;
+      // Return relative path that works with nginx proxy
+      // Frontend will use this with the API base URL (/api)
+      return `/uploads/${uniqueFileName}`;
     } catch (error) {
       console.error('Local upload error:', error);
       throw new Error('Failed to save image locally: ' + error.message);
