@@ -137,11 +137,17 @@ const Inventory = () => {
       // Remove the image from the array
       imageUrls = imageUrls.filter(img => img !== imageUrl);
       
-      // Update the item
-      const updateData = new FormData();
-      updateData.append('image_urls', JSON.stringify(imageUrls));
-      
-      await api.put(`/inventory/${itemId}`, { image_urls: imageUrls });
+      // Update the item with all required fields
+      await api.put(`/inventory/${itemId}`, {
+        name: item.name,
+        location: item.location,
+        categoryId: item.category_id,
+        subCategoryId: item.sub_category_id,
+        shelf: item.shelf,
+        description: item.description,
+        minThreshold: item.min_threshold,
+        image_urls: imageUrls
+      });
       
       // Reload inventory
       loadInventory();
@@ -150,8 +156,10 @@ const Inventory = () => {
       if (galleryItem && galleryItem.id === itemId) {
         setGalleryItem({ ...galleryItem, image_urls: imageUrls });
       }
+      
+      alert('Image deleted successfully');
     } catch (err) {
-      alert('Failed to delete image');
+      alert('Failed to delete image: ' + (err.response?.data?.message || err.message));
       console.error(err);
     }
   };
