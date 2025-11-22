@@ -127,6 +127,35 @@ const Inventory = () => {
     }
   };
 
+  const handleDeleteImage = async (itemId, imageUrl) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return;
+    try {
+      // Get current item
+      const item = inventory.find(i => i.id === itemId);
+      let imageUrls = item.image_urls || [];
+      
+      // Remove the image from the array
+      imageUrls = imageUrls.filter(img => img !== imageUrl);
+      
+      // Update the item
+      const updateData = new FormData();
+      updateData.append('image_urls', JSON.stringify(imageUrls));
+      
+      await api.put(`/inventory/${itemId}`, { image_urls: imageUrls });
+      
+      // Reload inventory
+      loadInventory();
+      
+      // Update gallery if open
+      if (galleryItem && galleryItem.id === itemId) {
+        setGalleryItem({ ...galleryItem, image_urls: imageUrls });
+      }
+    } catch (err) {
+      alert('Failed to delete image');
+      console.error(err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -720,13 +749,23 @@ const Inventory = () => {
                     <h4 className="font-semibold mb-3 text-gray-700">Product Images</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {images.map((img, idx) => (
-                        <div key={idx} className="aspect-square">
+                        <div key={idx} className="aspect-square relative group">
                           <img 
                             src={img} 
                             alt={`${galleryItem.name} - ${idx + 1}`}
                             className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-75 transition"
                             onClick={() => window.open(img, '_blank')}
                           />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteImage(galleryItem.id, img);
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
+                            title="Delete image"
+                          >
+                            <i className="fas fa-trash text-sm"></i>
+                          </button>
                         </div>
                       ))}
                     </div>
