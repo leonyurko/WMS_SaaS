@@ -149,13 +149,10 @@ const Inventory = () => {
         image_urls: imageUrls
       });
       
-      // Reload inventory
-      loadInventory();
-      
-      // Update gallery if open
-      if (galleryItem && galleryItem.id === itemId) {
-        setGalleryItem({ ...galleryItem, image_urls: imageUrls });
-      }
+      // Close gallery and reload
+      setShowGallery(false);
+      setGalleryItem(null);
+      await loadInventory();
       
       alert('Image deleted successfully');
     } catch (err) {
