@@ -137,7 +137,7 @@ const Inventory = () => {
       // Remove the image from the array
       imageUrls = imageUrls.filter(img => img !== imageUrl);
       
-      // Update the item with all required fields
+      // Update the item with all required fields (use camelCase for backend)
       await api.put(`/inventory/${itemId}`, {
         name: item.name,
         location: item.location,
@@ -146,7 +146,7 @@ const Inventory = () => {
         shelf: item.shelf,
         description: item.description,
         minThreshold: item.min_threshold,
-        image_urls: imageUrls
+        imageUrls: imageUrls  // camelCase, not image_urls
       });
       
       // Close gallery and reload
