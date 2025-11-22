@@ -133,12 +133,15 @@ const updateInventory = async (req, res, next) => {
       data.imageUrl = req.imageUrl;
     }
 
-    // Add multiple images if uploaded
+    // Add multiple images if uploaded or if explicitly set (even if empty)
     if (req.imageUrls && req.imageUrls.length > 0) {
       // Merge with existing images
       const existingImages = existingItem.image_urls || [];
       const allImages = [...existingImages, ...req.imageUrls].slice(0, 5); // Max 5 images
       data.imageUrls = allImages;
+    } else if (data.imageUrls !== undefined) {
+      // Allow explicit setting of imageUrls (including empty array for deletion)
+      // Already set in data from req.body
     }
 
     const item = await inventoryService.updateInventory(id, data);
