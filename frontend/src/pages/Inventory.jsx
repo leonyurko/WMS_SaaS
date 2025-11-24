@@ -767,9 +767,10 @@ const Inventory = () => {
 
               {/* Images Grid */}
               {(() => {
-                const images = galleryItem.image_urls || [];
+                // Create a NEW array to avoid mutating galleryItem.image_urls
+                let images = [...(galleryItem.image_urls || [])];
                 if (galleryItem.image_url && !images.includes(galleryItem.image_url)) {
-                  images.unshift(galleryItem.image_url);
+                  images = [galleryItem.image_url, ...images];
                 }
 
                 return images.length > 0 ? (
