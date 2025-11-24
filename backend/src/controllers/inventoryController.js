@@ -128,6 +128,10 @@ const updateInventory = async (req, res, next) => {
       });
     }
 
+    console.log('🔍 Controller - req.body:', JSON.stringify(req.body, null, 2));
+    console.log('🔍 Controller - data.imageUrl:', data.imageUrl);
+    console.log('🔍 Controller - data.imageUrls:', data.imageUrls);
+
     // Add imageUrl if uploaded
     if (req.imageUrl) {
       data.imageUrl = req.imageUrl;
