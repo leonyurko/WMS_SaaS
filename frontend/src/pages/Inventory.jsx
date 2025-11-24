@@ -162,10 +162,20 @@ const Inventory = () => {
         imageUrls: imageUrls  // camelCase, not image_urls
       });
 
-      // Close gallery and reload
-      setShowGallery(false);
-      setGalleryItem(null);
+      // Reload inventory to get fresh data
       await loadInventory();
+
+      // Update the gallery item with fresh data from the reloaded inventory
+      const updatedInventory = await fetchInventory({ search, status: statusFilter });
+      const updatedItem = updatedInventory.items.find(i => i.id === itemId);
+
+      if (updatedItem) {
+        setGalleryItem(updatedItem);
+      } else {
+        // Item might have been deleted, close gallery
+        setShowGallery(false);
+        setGalleryItem(null);
+      }
 
       alert('Image deleted successfully');
     } catch (err) {
