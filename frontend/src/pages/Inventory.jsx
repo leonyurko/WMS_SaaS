@@ -150,7 +150,7 @@ const Inventory = () => {
       }
 
       // Update the item with all required fields (use camelCase for backend)
-      await api.put(`/inventory/${itemId}`, {
+      const response = await api.put(`/inventory/${itemId}`, {
         name: item.name,
         location: item.location,
         categoryId: item.category_id,
@@ -162,20 +162,13 @@ const Inventory = () => {
         imageUrls: imageUrls  // camelCase, not image_urls
       });
 
-      // Reload inventory to get fresh data
-      await loadInventory();
-
-      // Update the gallery item with fresh data from the reloaded inventory
-      const updatedInventory = await fetchInventory({ search, status: statusFilter });
-      const updatedItem = updatedInventory.items.find(i => i.id === itemId);
-
-      if (updatedItem) {
-        setGalleryItem(updatedItem);
-      } else {
-        // Item might have been deleted, close gallery
-        setShowGallery(false);
-        setGalleryItem(null);
+      // Update the gallery item with the response data directly
+      if (response.data && response.data.data && response.data.data.item) {
+        setGalleryItem(response.data.data.item);
       }
+
+      // Reload inventory list in the background
+      loadInventory();
 
       alert('Image deleted successfully');
     } catch (err) {
