@@ -38,7 +38,8 @@ const uploadToS3 = async (fileBuffer, fileName, mimeType) => {
   // Check if AWS credentials are provided and NOT dummy values
   const hasValidAwsKeys = process.env.AWS_ACCESS_KEY_ID &&
     process.env.AWS_SECRET_ACCESS_KEY &&
-    !process.env.AWS_ACCESS_KEY_ID.includes('your-aws-access-key');
+    !process.env.AWS_ACCESS_KEY_ID.includes('your-aws-access-key') &&
+    !process.env.AWS_SECRET_ACCESS_KEY.includes('your-aws-secret-key');
 
   if (hasValidAwsKeys) {
     const params = {

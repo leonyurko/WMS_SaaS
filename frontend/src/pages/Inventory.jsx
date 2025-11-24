@@ -14,7 +14,7 @@ const Inventory = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [categories, setCategories] = useState([]);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -133,14 +133,20 @@ const Inventory = () => {
       // Get current item
       const item = inventory.find(i => i.id === itemId);
       let imageUrls = item.image_urls || [];
-      
+
       // Remove the image from the array
       imageUrls = imageUrls.filter(img => img !== imageUrl);
-      
+
       // Determine new primary image
       let newImageUrl = item.image_url;
+
+      // If we are deleting the current primary image
       if (item.image_url === imageUrl) {
+        // Set the first available image as primary, or null if no images left
         newImageUrl = imageUrls.length > 0 ? imageUrls[0] : null;
+      } else if (!newImageUrl && imageUrls.length > 0) {
+        // If there was no primary image but we have images, set one
+        newImageUrl = imageUrls[0];
       }
 
       // Update the item with all required fields (use camelCase for backend)
@@ -155,12 +161,12 @@ const Inventory = () => {
         imageUrl: newImageUrl,
         imageUrls: imageUrls  // camelCase, not image_urls
       });
-      
+
       // Close gallery and reload
       setShowGallery(false);
       setGalleryItem(null);
       await loadInventory();
-      
+
       alert('Image deleted successfully');
     } catch (err) {
       alert('Failed to delete image: ' + (err.response?.data?.message || err.message));
@@ -179,7 +185,7 @@ const Inventory = () => {
       if (formData.shelf) data.append('shelf', formData.shelf);
       data.append('location', formData.location);
       data.append('minThreshold', formData.minQuantity);
-      
+
       // Append multiple images
       if (formData.images && formData.images.length > 0) {
         formData.images.forEach(img => {
@@ -212,7 +218,7 @@ const Inventory = () => {
 
   const printItem = (item) => {
     const printWindow = window.open('', '_blank');
-    
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -353,7 +359,7 @@ const Inventory = () => {
       </body>
       </html>
     `;
-    
+
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
@@ -460,16 +466,16 @@ const Inventory = () => {
                 {inventory.map((item) => {
                   const images = item.image_urls || [];
                   const hasMultipleImages = images.length > 1;
-                  
+
                   return (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         {item.image_url || images.length > 0 ? (
                           <div className="relative">
-                            <img 
-                              src={images[0] || item.image_url} 
-                              alt={item.name} 
-                              className="h-10 w-10 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500" 
+                            <img
+                              src={images[0] || item.image_url}
+                              alt={item.name}
+                              className="h-10 w-10 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500"
                               onClick={() => openGallery(item)}
                             />
                             {hasMultipleImages && (
@@ -490,10 +496,10 @@ const Inventory = () => {
                       </td>
                       <td className="px-6 py-4">
                         {item.barcode_image_url ? (
-                          <img 
-                            src={item.barcode_image_url} 
-                            alt="Barcode" 
-                            className="h-8 w-auto cursor-pointer hover:ring-2 hover:ring-blue-500" 
+                          <img
+                            src={item.barcode_image_url}
+                            alt="Barcode"
+                            className="h-8 w-auto cursor-pointer hover:ring-2 hover:ring-blue-500"
                             onClick={() => window.open(item.barcode_image_url, '_blank')}
                           />
                         ) : (
@@ -502,10 +508,10 @@ const Inventory = () => {
                       </td>
                       <td className="px-6 py-4">
                         {item.qr_image_url ? (
-                          <img 
-                            src={item.qr_image_url} 
-                            alt="QR Code" 
-                            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500" 
+                          <img
+                            src={item.qr_image_url}
+                            alt="QR Code"
+                            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500"
                             onClick={() => window.open(item.qr_image_url, '_blank')}
                           />
                         ) : (
@@ -523,21 +529,21 @@ const Inventory = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        <button 
+                        <button
                           onClick={() => printItem(item)}
                           className="text-gray-600 hover:text-gray-900"
                           title="Print"
                         >
                           <i className="fas fa-print"></i>
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleEdit(item)}
                           className="text-blue-600 hover:text-blue-900"
                           title="Edit"
                         >
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(item.id)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete"
@@ -566,7 +572,7 @@ const Inventory = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
@@ -718,14 +724,14 @@ const Inventory = () => {
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
               <h3 className="text-xl font-semibold text-gray-900">{galleryItem.name}</h3>
-              <button 
-                onClick={() => setShowGallery(false)} 
+              <button
+                onClick={() => setShowGallery(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             <div className="p-6">
               {/* Item Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -755,15 +761,15 @@ const Inventory = () => {
                 if (galleryItem.image_url && !images.includes(galleryItem.image_url)) {
                   images.unshift(galleryItem.image_url);
                 }
-                
+
                 return images.length > 0 ? (
                   <div>
                     <h4 className="font-semibold mb-3 text-gray-700">Product Images</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {images.map((img, idx) => (
                         <div key={idx} className="aspect-square relative group">
-                          <img 
-                            src={img} 
+                          <img
+                            src={img}
                             alt={`${galleryItem.name} - ${idx + 1}`}
                             className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-75 transition"
                             onClick={() => window.open(img, '_blank')}
@@ -798,9 +804,9 @@ const Inventory = () => {
                     {galleryItem.barcode_image_url && (
                       <div className="bg-gray-50 p-4 rounded-lg text-center">
                         <p className="text-sm font-semibold text-gray-600 mb-2">Barcode</p>
-                        <img 
-                          src={galleryItem.barcode_image_url} 
-                          alt="Barcode" 
+                        <img
+                          src={galleryItem.barcode_image_url}
+                          alt="Barcode"
                           className="mx-auto max-h-20 cursor-pointer hover:opacity-75"
                           onClick={() => window.open(galleryItem.barcode_image_url, '_blank')}
                         />
@@ -810,9 +816,9 @@ const Inventory = () => {
                     {galleryItem.qr_image_url && (
                       <div className="bg-gray-50 p-4 rounded-lg text-center">
                         <p className="text-sm font-semibold text-gray-600 mb-2">QR Code</p>
-                        <img 
-                          src={galleryItem.qr_image_url} 
-                          alt="QR Code" 
+                        <img
+                          src={galleryItem.qr_image_url}
+                          alt="QR Code"
                           className="mx-auto max-h-32 cursor-pointer hover:opacity-75"
                           onClick={() => window.open(galleryItem.qr_image_url, '_blank')}
                         />
