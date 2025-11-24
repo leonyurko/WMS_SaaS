@@ -75,7 +75,9 @@ const schemas = {
     subCategoryId: Joi.string().uuid().allow(null, ''),
     shelf: Joi.string().max(50).allow(null, ''),
     description: Joi.string().allow(null, ''),
-    minThreshold: Joi.number().integer().min(0)
+    minThreshold: Joi.number().integer().min(0),
+    imageUrl: Joi.string().uri().allow(null, ''),
+    imageUrls: Joi.array().items(Joi.string().uri()).allow(null)
   }).min(1),
 
   // Stock update validation
