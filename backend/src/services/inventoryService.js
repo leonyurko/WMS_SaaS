@@ -142,18 +142,18 @@ const createInventory = async (data, barcode, codeImages = {}) => {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     RETURNING *`,
     [
-      name, 
-      location, 
-      categoryId || null, 
-      subCategoryId || null, 
-      shelf || null, 
-      description || null, 
-      imageUrl || null, 
+      name,
+      location,
+      categoryId || null,
+      subCategoryId || null,
+      shelf || null,
+      description || null,
+      imageUrl || null,
       imageUrls ? JSON.stringify(imageUrls) : '[]',
-      barcode, 
+      barcode,
       barcodeImageUrl || null,
       qrImageUrl || null,
-      currentStock, 
+      currentStock,
       minThreshold || 10
     ]
   );
@@ -198,6 +198,8 @@ const updateInventory = async (id, data) => {
     values.push(data.imageUrl || null);
   }
   if (data.imageUrls !== undefined) {
+    console.log('🔍 Updating image_urls:', data.imageUrls);
+    console.log('🔍 Stringified:', JSON.stringify(data.imageUrls));
     fields.push(`image_urls = $${paramCount++}`);
     values.push(JSON.stringify(data.imageUrls));
   }
@@ -212,10 +214,15 @@ const updateInventory = async (id, data) => {
 
   values.push(id);
 
+  console.log('🔍 Update query:', `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${paramCount}`);
+  console.log('🔍 Update values:', values);
+
   const result = await query(
     `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
     values
   );
+
+  console.log('🔍 Updated item image_urls:', result.rows[0].image_urls);
 
   return result.rows[0];
 };
