@@ -134,6 +134,10 @@ const Inventory = () => {
       const item = inventory.find(i => i.id === itemId);
       let imageUrls = item.image_urls || [];
 
+      console.log('🔍 Before delete - image_urls:', imageUrls);
+      console.log('🔍 Before delete - image_url:', item.image_url);
+      console.log('🔍 Deleting:', imageUrl);
+
       // Remove the image from the array
       imageUrls = imageUrls.filter(img => img !== imageUrl);
 
@@ -149,6 +153,9 @@ const Inventory = () => {
         newImageUrl = imageUrls[0];
       }
 
+      console.log('🔍 After delete - new image_urls:', imageUrls);
+      console.log('🔍 After delete - new image_url:', newImageUrl);
+
       // Update the item with all required fields (use camelCase for backend)
       const response = await api.put(`/inventory/${itemId}`, {
         name: item.name,
@@ -162,13 +169,22 @@ const Inventory = () => {
         imageUrls: imageUrls  // camelCase, not image_urls
       });
 
-      // Update the gallery item with the response data directly
-      if (response.data && response.data.data && response.data.data.item) {
-        setGalleryItem(response.data.data.item);
-      }
+      console.log('🔍 Server response:', response.data.data.item);
+      console.log('🔍 Response image_urls:', response.data.data.item.image_urls);
+      console.log('🔍 Response image_url:', response.data.data.item.image_url);
 
-      // Reload inventory list in the background
-      loadInventory();
+      // Close and reopen the gallery to force a fresh render
+      setShowGallery(false);
+      setGalleryItem(null);
+
+      // Reload inventory list
+      await loadInventory();
+
+      // Small delay to ensure state updates, then reopen gallery with fresh data
+      setTimeout(() => {
+        setGalleryItem(response.data.data.item);
+        setShowGallery(true);
+      }, 100);
 
       alert('Image deleted successfully');
     } catch (err) {
