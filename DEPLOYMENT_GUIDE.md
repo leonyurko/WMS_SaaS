@@ -23,45 +23,20 @@ cd /path/to/your/repo
 git pull origin main
 ```
 
-## 3. Environment Configuration (CRITICAL)
-You must create a `.env` file on the server. This file is **not** committed to git for security reasons.
+## 3. Environment Configuration
+Since you have committed `.env.production` to the repository, you can simply copy it to `.env` on the server.
 
-Create the file:
 ```bash
-nano .env
+cp .env.production .env
 ```
 
-Paste the following content and **replace the values with your actual secrets**:
+> [!WARNING]
+> **Security Note**: Since your secrets are now in the git repository, ensure your repository is **Private**. If you ever make it public, you must rotate all secrets (DB password, JWT secret, AWS keys).
 
-```ini
-# Database Configuration
-DB_NAME=wms_db
-DB_USER=postgres
-DB_PASSWORD=YOUR_SECURE_DB_PASSWORD  # <--- CHANGE THIS
-DB_HOST=postgres
-DB_PORT=5432
-
-# JWT Secret
-JWT_SECRET=YOUR_LONG_RANDOM_SECRET_STRING # <--- CHANGE THIS
-
-# CORS Origin
-CORS_ORIGIN=https://your-domain.com # <--- CHANGE THIS to your domain or EC2 IP
-
-# Email Configuration (Optional)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-gmail-app-password
-EMAIL_FROM=your-email@gmail.com
-
-# AWS Configuration (Optional - Local storage used if left as is)
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-aws-access-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-S3_BUCKET_NAME=wms-inventory-images
-
-# Frontend API URL
-VITE_API_URL=/api
+### Verify Values
+Check that the values in `.env` are correct for your production environment:
+```bash
+cat .env
 ```
 
 ## 4. SSL Certificates
