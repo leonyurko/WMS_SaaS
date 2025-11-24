@@ -35,8 +35,12 @@ if (!fs.existsSync(UPLOADS_DIR)) {
  * @returns {Promise<string>} URL
  */
 const uploadToS3 = async (fileBuffer, fileName, mimeType) => {
-  // Check if AWS credentials are provided
-  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  // Check if AWS credentials are provided and NOT dummy values
+  const hasValidAwsKeys = process.env.AWS_ACCESS_KEY_ID &&
+    process.env.AWS_SECRET_ACCESS_KEY &&
+    !process.env.AWS_ACCESS_KEY_ID.includes('your-aws-access-key');
+
+  if (hasValidAwsKeys) {
     const params = {
       Bucket: S3_BUCKET,
       Key: `inventory/${Date.now()}-${fileName}`,
@@ -57,9 +61,9 @@ const uploadToS3 = async (fileBuffer, fileName, mimeType) => {
     try {
       const uniqueFileName = `${Date.now()}-${fileName}`;
       const filePath = path.join(UPLOADS_DIR, uniqueFileName);
-      
+
       fs.writeFileSync(filePath, fileBuffer);
-      
+
       // Return relative path that works with nginx proxy
       // Frontend will use this with the API base URL (/api)
       return `/uploads/${uniqueFileName}`;
@@ -93,7 +97,7 @@ const deleteFromS3 = async (fileUrl) => {
       // It's likely a local file
       const fileName = path.basename(fileUrl);
       const filePath = path.join(UPLOADS_DIR, fileName);
-      
+
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         return true;

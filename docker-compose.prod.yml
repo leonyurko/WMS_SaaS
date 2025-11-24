@@ -59,6 +59,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
     restart: unless-stopped
 
   frontend:
@@ -90,3 +92,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
