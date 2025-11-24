@@ -4,7 +4,7 @@ const inventoryController = require('../controllers/inventoryController');
 const { authenticateToken, requireManagerOrAdmin, requireAdmin } = require('../middleware/auth');
 const { validateRequest, schemas } = require('../middleware/validation');
 const { generateBarcodeMiddleware } = require('../middleware/barcode');
-const { uploadSingleImage, uploadMultipleImages, processImageUpload, processMultipleImageUpload } = require('../middleware/upload');
+const { uploadSingleImage, uploadMultipleImages, conditionalUploadMultiple, processImageUpload, processMultipleImageUpload } = require('../middleware/upload');
 
 // All routes require authentication
 router.use(authenticateToken);
@@ -33,7 +33,7 @@ router.post(
 router.put(
   '/:id',
   requireManagerOrAdmin,
-  uploadMultipleImages,
+  conditionalUploadMultiple,  // Use conditional middleware instead of uploadMultipleImages
   processMultipleImageUpload,
   validateRequest(schemas.updateInventory),
   inventoryController.updateInventory
