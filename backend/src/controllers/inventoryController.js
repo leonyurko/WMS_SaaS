@@ -8,7 +8,7 @@ const { generateBothCodes } = require('../services/codeGeneratorService');
 const getAllInventory = async (req, res, next) => {
   try {
     const { search, category, status, page, limit } = req.query;
-    
+
     const result = await inventoryService.getAllInventory(
       { search, category, status },
       { page, limit }
@@ -80,7 +80,7 @@ const getInventoryByBarcode = async (req, res, next) => {
 const createInventory = async (req, res, next) => {
   try {
     const data = req.body;
-    
+
     // Barcode and imageUrl will be added by other middleware/services
     const barcode = req.barcode; // Set by barcode generation middleware
     const imageUrl = req.imageUrl; // Set by image upload middleware
@@ -143,6 +143,8 @@ const updateInventory = async (req, res, next) => {
       // Allow explicit setting of imageUrls (including empty array for deletion)
       // Already set in data from req.body
     }
+
+    console.log('🔍 Controller - data object being sent to service:', JSON.stringify(data, null, 2));
 
     const item = await inventoryService.updateInventory(id, data);
 
