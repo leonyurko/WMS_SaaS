@@ -166,8 +166,8 @@ const createInventory = async (data, barcode, codeImages = {}) => {
 
   const result = await query(
     `INSERT INTO inventory 
-      (name, location, category_id, sub_category_id, shelf, shelf_column, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      (name, location, category_id, sub_category_id, shelf, shelf_column, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold, additional_locations, location_details)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     RETURNING *`,
     [
       name,
@@ -183,7 +183,9 @@ const createInventory = async (data, barcode, codeImages = {}) => {
       barcodeImageUrl || null,
       qrImageUrl || null,
       currentStock,
-      minThreshold || 10
+      minThreshold || 10,
+      JSON.stringify(data.additionalLocations || []),
+      data.locationDetails || null
     ]
   );
 
@@ -221,6 +223,14 @@ const updateInventory = async (id, data) => {
   if (data.shelfColumn !== undefined) {
     fields.push(`shelf_column = $${paramCount++}`);
     values.push(data.shelfColumn || null);
+  }
+  if (data.additionalLocations !== undefined) {
+    fields.push(`additional_locations = $${paramCount++}`);
+    values.push(JSON.stringify(data.additionalLocations || []));
+  }
+  if (data.locationDetails !== undefined) {
+    fields.push(`location_details = $${paramCount++}`);
+    values.push(data.locationDetails || null);
   }
   if (data.description !== undefined) {
     fields.push(`description = $${paramCount++}`);

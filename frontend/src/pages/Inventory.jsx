@@ -36,7 +36,9 @@ const Inventory = () => {
     quantity: 0,
     location: '', // Warehouse
     minQuantity: 5,
-    images: []
+    images: [],
+    additionalLocations: [],
+    locationDetails: ''
   });
 
   // Gallery modal state
@@ -132,10 +134,42 @@ const Inventory = () => {
     setFormData(prev => ({ ...prev, images: files }));
   };
 
+  // Dynamic Location Helpers
+  const addLocation = () => {
+    setFormData(prev => ({
+      ...prev,
+      additionalLocations: [...prev.additionalLocations, { warehouse: '', shelf: '', shelfColumn: '' }]
+    }));
+  };
+
+  const removeLocation = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      additionalLocations: prev.additionalLocations.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleLocationChange = (index, field, value) => {
+    setFormData(prev => {
+      const newLocations = [...prev.additionalLocations];
+      newLocations[index] = { ...newLocations[index], [field]: value };
+
+      // Reset dependent fields
+      if (field === 'warehouse') {
+        newLocations[index].shelf = '';
+        newLocations[index].shelfColumn = '';
+      } else if (field === 'shelf') {
+        newLocations[index].shelfColumn = '';
+      }
+
+      return { ...prev, additionalLocations: newLocations };
+    });
+  };
+
   const resetForm = () => {
     setFormData({
       name: '', description: '', categoryId: '', subCategoryId: '', shelf: '', shelfColumn: '',
-      quantity: 0, location: '', minQuantity: 5, images: []
+      quantity: 0, location: '', minQuantity: 5, images: [], additionalLocations: [], locationDetails: ''
     });
     setIsEditing(false);
     setCurrentId(null);
@@ -152,7 +186,9 @@ const Inventory = () => {
       quantity: item.current_stock,
       location: item.location || '',
       minQuantity: item.min_threshold,
-      images: []
+      images: [],
+      additionalLocations: item.additional_locations || [],
+      locationDetails: item.location_details || ''
     });
     setCurrentId(item.id);
     setIsEditing(true);
@@ -247,6 +283,12 @@ const Inventory = () => {
       if (formData.shelfColumn) data.append('shelfColumn', formData.shelfColumn);
       data.append('location', formData.location);
       data.append('minThreshold', formData.minQuantity);
+
+      // New fields
+      data.append('locationDetails', formData.locationDetails);
+      if (formData.additionalLocations.length > 0) {
+        data.append('additionalLocations', JSON.stringify(formData.additionalLocations));
+      }
 
       // Append multiple images
       if (formData.images && formData.images.length > 0) {
@@ -788,6 +830,90 @@ const Inventory = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Location Details</label>
+                <input
+                  type="text"
+                  name="locationDetails"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  value={formData.locationDetails}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Near the entrance, Top shelf"
+                />
+              </div>
+
+              {/* Additional Locations */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Additional Locations</label>
+                  <button
+                    type="button"
+                    onClick={addLocation}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    + Add Location
+                  </button>
+                </div>
+                {formData.additionalLocations.map((loc, index) => {
+                  const locRows = loc.warehouse ? layouts[loc.warehouse] || [] : [];
+                  const locCols = (loc.warehouse && loc.shelf) ? locRows.find(r => r.name === loc.shelf)?.columnNames || [] : [];
+
+                  return (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 rounded border">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500">Warehouse</label>
+                        <select
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                          value={loc.warehouse}
+                          onChange={(e) => handleLocationChange(index, 'warehouse', e.target.value)}
+                        >
+                          <option value="">Select Warehouse</option>
+                          <option value="Small">Small Warehouse</option>
+                          <option value="Large">Large Warehouse</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500">Row (Shelf)</label>
+                        <select
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                          value={loc.shelf}
+                          onChange={(e) => handleLocationChange(index, 'shelf', e.target.value)}
+                          disabled={!loc.warehouse}
+                        >
+                          <option value="">Select Row</option>
+                          {locRows.map((r, i) => (
+                            <option key={i} value={r.name}>{r.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500">Column</label>
+                        <select
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                          value={loc.shelfColumn}
+                          onChange={(e) => handleLocationChange(index, 'shelfColumn', e.target.value)}
+                          disabled={!loc.shelf}
+                        >
+                          <option value="">Select Column</option>
+                          {locCols.map((c, i) => (
+                            <option key={i} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(index)}
+                          className="text-red-600 hover:text-red-800 text-sm mb-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
