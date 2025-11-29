@@ -806,6 +806,7 @@ const Inventory = () => {
                     value={formData.shelf}
                     onChange={handleInputChange}
                     placeholder="e.g. A1"
+                    disabled={!formData.location}
                   />
                 </div>
                 <div>
@@ -816,7 +817,8 @@ const Inventory = () => {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     value={formData.shelfColumn}
                     onChange={handleInputChange}
-                    placeholder="from [col] to [col]"
+                    placeholder="from [col_number] to [col number]"
+                    disabled={!formData.shelf}
                   />
                 </div>
               </div>
@@ -871,6 +873,7 @@ const Inventory = () => {
                           value={loc.shelf}
                           onChange={(e) => handleLocationChange(index, 'shelf', e.target.value)}
                           placeholder="e.g. A1"
+                          disabled={!loc.warehouse}
                         />
                       </div>
                       <div>
@@ -880,7 +883,8 @@ const Inventory = () => {
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
                           value={loc.shelfColumn}
                           onChange={(e) => handleLocationChange(index, 'shelfColumn', e.target.value)}
-                          placeholder="from [col] to [col]"
+                          placeholder="from [col_number] to [col number]"
+                          disabled={!loc.shelf}
                         />
                       </div>
                       <div className="flex items-end">
