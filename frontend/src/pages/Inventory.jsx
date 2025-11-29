@@ -799,36 +799,25 @@ const Inventory = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Row (Shelf)</label>
-                  <select
+                  <input
+                    type="text"
                     name="shelf"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     value={formData.shelf}
-                    onChange={(e) => {
-                      handleInputChange(e);
-                      setFormData(prev => ({ ...prev, shelfColumn: '' }));
-                    }}
-                    disabled={!formData.location}
-                  >
-                    <option value="">Select Row</option>
-                    {formRows.map((r, i) => (
-                      <option key={i} value={r.name}>{r.name}</option>
-                    ))}
-                  </select>
+                    onChange={handleInputChange}
+                    placeholder="e.g. A1"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Column</label>
-                  <select
+                  <input
+                    type="text"
                     name="shelfColumn"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     value={formData.shelfColumn}
                     onChange={handleInputChange}
-                    disabled={!formData.shelf}
-                  >
-                    <option value="">Select Column</option>
-                    {formCols.map((c, i) => (
-                      <option key={i} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    placeholder="from [col] to [col]"
+                  />
                 </div>
               </div>
 
@@ -876,31 +865,23 @@ const Inventory = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Row (Shelf)</label>
-                        <select
+                        <input
+                          type="text"
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
                           value={loc.shelf}
                           onChange={(e) => handleLocationChange(index, 'shelf', e.target.value)}
-                          disabled={!loc.warehouse}
-                        >
-                          <option value="">Select Row</option>
-                          {locRows.map((r, i) => (
-                            <option key={i} value={r.name}>{r.name}</option>
-                          ))}
-                        </select>
+                          placeholder="e.g. A1"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Column</label>
-                        <select
+                        <input
+                          type="text"
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
                           value={loc.shelfColumn}
                           onChange={(e) => handleLocationChange(index, 'shelfColumn', e.target.value)}
-                          disabled={!loc.shelf}
-                        >
-                          <option value="">Select Column</option>
-                          {locCols.map((c, i) => (
-                            <option key={i} value={c}>{c}</option>
-                          ))}
-                        </select>
+                          placeholder="from [col] to [col]"
+                        />
                       </div>
                       <div className="flex items-end">
                         <button
