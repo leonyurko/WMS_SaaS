@@ -41,6 +41,9 @@ const Inventory = () => {
     locationDetails: ''
   });
 
+  // Column Builder State for Main Location
+  const [mainColumnBuilder, setMainColumnBuilder] = useState([{ id: 'init', value: '', relation: 'To' }]);
+
   // Gallery modal state
   const [galleryItem, setGalleryItem] = useState(null);
   const [showGallery, setShowGallery] = useState(false);
@@ -51,6 +54,19 @@ const Inventory = () => {
     loadCategories();
     fetchLayouts();
   }, [setPageTitle, statusFilter, warehouseFilter, shelfFilter, columnFilter, partNumberFilter]);
+
+  // Sync mainColumnBuilder to formData.shelfColumn
+  useEffect(() => {
+    if (mainColumnBuilder.length === 0) {
+      setFormData(prev => ({ ...prev, shelfColumn: '' }));
+      return;
+    }
+    const str = mainColumnBuilder.map((item, index) => {
+      if (index === 0) return item.value;
+      return `${item.relation} ${item.value}`;
+    }).join(' ');
+    setFormData(prev => ({ ...prev, shelfColumn: str }));
+  }, [mainColumnBuilder]);
 
   const fetchLayouts = async () => {
     try {
@@ -114,9 +130,6 @@ const Inventory = () => {
   const searchRows = warehouseFilter ? layouts[warehouseFilter] || [] : [];
   const searchCols = (warehouseFilter && shelfFilter) ? searchRows.find(r => r.name === shelfFilter)?.columnNames || [] : [];
 
-  const formRows = formData.location ? layouts[formData.location] || [] : [];
-  const formCols = (formData.location && formData.shelf) ? formRows.find(r => r.name === formData.shelf)?.columnNames || [] : [];
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => {
@@ -138,7 +151,12 @@ const Inventory = () => {
   const addLocation = () => {
     setFormData(prev => ({
       ...prev,
-      additionalLocations: [...prev.additionalLocations, { warehouse: '', shelf: '', shelfColumn: '' }]
+      additionalLocations: [...prev.additionalLocations, {
+        warehouse: '',
+        shelf: '',
+        shelfColumn: '',
+        columnBuilder: [{ id: Date.now(), value: '', relation: 'To' }]
+      }]
     }));
   };
 
@@ -158,9 +176,94 @@ const Inventory = () => {
       if (field === 'warehouse') {
         newLocations[index].shelf = '';
         newLocations[index].shelfColumn = '';
+        newLocations[index].columnBuilder = [{ id: Date.now(), value: '', relation: 'To' }];
       } else if (field === 'shelf') {
         newLocations[index].shelfColumn = '';
+        newLocations[index].columnBuilder = [{ id: Date.now(), value: '', relation: 'To' }];
       }
+
+      return { ...prev, additionalLocations: newLocations };
+    });
+  };
+
+  // Column Builder Helpers
+  const parseColumnString = (str) => {
+    if (!str) return [{ id: Date.now(), value: '', relation: 'To' }];
+    const parts = str.split(/( To | And )/g);
+    const builder = [];
+    let currentRelation = 'To';
+
+    parts.forEach((part, i) => {
+      if (part.trim() === 'To' || part.trim() === 'And') {
+        currentRelation = part.trim();
+      } else {
+        if (builder.length === 0) {
+          builder.push({ id: Date.now() + i, value: part.trim(), relation: 'To' });
+        } else {
+          builder.push({ id: Date.now() + i, value: part.trim(), relation: currentRelation });
+        }
+      }
+    });
+    return builder.length > 0 ? builder : [{ id: Date.now(), value: '', relation: 'To' }];
+  };
+
+  const updateMainColumnBuilder = (index, field, value) => {
+    setMainColumnBuilder(prev => {
+      const newBuilder = [...prev];
+      newBuilder[index] = { ...newBuilder[index], [field]: value };
+      return newBuilder;
+    });
+  };
+
+  const addMainColumn = () => {
+    setMainColumnBuilder(prev => [...prev, { id: Date.now(), value: '', relation: 'To' }]);
+  };
+
+  const removeMainColumn = (index) => {
+    setMainColumnBuilder(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAddLocationColumnBuilder = (locIndex, colIndex, field, value) => {
+    setFormData(prev => {
+      const newLocations = [...prev.additionalLocations];
+      const newBuilder = [...(newLocations[locIndex].columnBuilder || [{ id: Date.now(), value: '', relation: 'To' }])];
+      newBuilder[colIndex] = { ...newBuilder[colIndex], [field]: value };
+      newLocations[locIndex].columnBuilder = newBuilder;
+
+      const str = newBuilder.map((item, idx) => {
+        if (idx === 0) return item.value;
+        return `${item.relation} ${item.value}`;
+      }).join(' ');
+      newLocations[locIndex].shelfColumn = str;
+
+      return { ...prev, additionalLocations: newLocations };
+    });
+  };
+
+  const addAddLocationColumn = (locIndex) => {
+    setFormData(prev => {
+      const newLocations = [...prev.additionalLocations];
+      const currentBuilder = newLocations[locIndex].columnBuilder || [{ id: Date.now(), value: '', relation: 'To' }];
+      newLocations[locIndex].columnBuilder = [
+        ...currentBuilder,
+        { id: Date.now(), value: '', relation: 'To' }
+      ];
+      return { ...prev, additionalLocations: newLocations };
+    });
+  };
+
+  const removeAddLocationColumn = (locIndex, colIndex) => {
+    setFormData(prev => {
+      const newLocations = [...prev.additionalLocations];
+      const currentBuilder = newLocations[locIndex].columnBuilder || [];
+      const newBuilder = currentBuilder.filter((_, i) => i !== colIndex);
+      newLocations[locIndex].columnBuilder = newBuilder;
+
+      const str = newBuilder.map((item, idx) => {
+        if (idx === 0) return item.value;
+        return `${item.relation} ${item.value}`;
+      }).join(' ');
+      newLocations[locIndex].shelfColumn = str;
 
       return { ...prev, additionalLocations: newLocations };
     });
@@ -171,6 +274,7 @@ const Inventory = () => {
       name: '', description: '', categoryId: '', subCategoryId: '', shelf: '', shelfColumn: '',
       quantity: 0, location: '', minQuantity: 5, images: [], additionalLocations: [], locationDetails: ''
     });
+    setMainColumnBuilder([{ id: 'init', value: '', relation: 'To' }]);
     setIsEditing(false);
     setCurrentId(null);
   };
@@ -187,9 +291,13 @@ const Inventory = () => {
       location: item.location || '',
       minQuantity: item.min_threshold,
       images: [],
-      additionalLocations: item.additional_locations || [],
+      additionalLocations: (item.additional_locations || []).map(loc => ({
+        ...loc,
+        columnBuilder: parseColumnString(loc.shelfColumn)
+      })),
       locationDetails: item.location_details || ''
     });
+    setMainColumnBuilder(parseColumnString(item.shelf_column));
     setCurrentId(item.id);
     setIsEditing(true);
     setShowModal(true);
@@ -208,33 +316,16 @@ const Inventory = () => {
   const handleDeleteImage = async (itemId, imageUrl) => {
     if (!window.confirm('Are you sure you want to delete this image?')) return;
     try {
-      // Get current item
       const item = inventory.find(i => i.id === itemId);
       let imageUrls = item.image_urls || [];
-
-      console.log('🔍 Before delete - image_urls:', imageUrls);
-      console.log('🔍 Before delete - image_url:', item.image_url);
-      console.log('🔍 Deleting:', imageUrl);
-
-      // Remove the image from the array
       imageUrls = imageUrls.filter(img => img !== imageUrl);
-
-      // Determine new primary image
       let newImageUrl = item.image_url;
-
-      // If we are deleting the current primary image
       if (item.image_url === imageUrl) {
-        // Set the first available image as primary, or null if no images left
         newImageUrl = imageUrls.length > 0 ? imageUrls[0] : null;
       } else if (!newImageUrl && imageUrls.length > 0) {
-        // If there was no primary image but we have images, set one
         newImageUrl = imageUrls[0];
       }
 
-      console.log('🔍 After delete - new image_urls:', imageUrls);
-      console.log('🔍 After delete - new image_url:', newImageUrl);
-
-      // Update the item with all required fields (use camelCase for backend)
       const response = await api.put(`/inventory/${itemId}`, {
         name: item.name,
         location: item.location,
@@ -244,30 +335,19 @@ const Inventory = () => {
         description: item.description,
         minThreshold: item.min_threshold,
         imageUrl: newImageUrl,
-        imageUrls: imageUrls  // camelCase, not image_urls
+        imageUrls: imageUrls
       });
 
-      console.log('🔍 Server response:', response.data.data.item);
-      console.log('🔍 Response image_urls:', response.data.data.item.image_urls);
-      console.log('🔍 Response image_url:', response.data.data.item.image_url);
-
-      // Close and reopen the gallery to force a fresh render
       setShowGallery(false);
       setGalleryItem(null);
-
-      // Reload inventory list
       await loadInventory();
-
-      // Small delay to ensure state updates, then reopen gallery with fresh data
       setTimeout(() => {
         setGalleryItem(response.data.data.item);
         setShowGallery(true);
       }, 100);
-
       alert('Image deleted successfully');
     } catch (err) {
       alert('Failed to delete image: ' + (err.response?.data?.message || err.message));
-      console.error(err);
     }
   };
 
@@ -283,14 +363,12 @@ const Inventory = () => {
       if (formData.shelfColumn) data.append('shelfColumn', formData.shelfColumn);
       data.append('location', formData.location);
       data.append('minThreshold', formData.minQuantity);
-
-      // New fields
       data.append('locationDetails', formData.locationDetails);
       if (formData.additionalLocations.length > 0) {
-        data.append('additionalLocations', JSON.stringify(formData.additionalLocations));
+        // Clean up columnBuilder before sending
+        const cleanLocations = formData.additionalLocations.map(({ columnBuilder, ...rest }) => rest);
+        data.append('additionalLocations', JSON.stringify(cleanLocations));
       }
-
-      // Append multiple images
       if (formData.images && formData.images.length > 0) {
         formData.images.forEach(img => {
           data.append('images', img);
@@ -322,282 +400,156 @@ const Inventory = () => {
 
   const printItem = (item) => {
     const printWindow = window.open('', '_blank');
-
     const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
         <title>Print: ${item.name}</title>
         <style>
-          @media print {
-            @page { margin: 0.5in; }
-          }
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-          }
-          .item-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-          }
-          .item-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-          }
-          .detail-row {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-          }
-          .detail-label {
-            font-weight: bold;
-            color: #555;
-            font-size: 12px;
-            text-transform: uppercase;
-          }
-          .detail-value {
-            font-size: 16px;
-            margin-top: 5px;
-          }
-          .codes {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-top: 30px;
-            padding: 20px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-          }
-          .code-item {
-            text-align: center;
-          }
-          .code-item img {
-            max-width: 200px;
-            height: auto;
-          }
-          .code-label {
-            font-weight: bold;
-            margin-top: 10px;
-            font-size: 14px;
-          }
-          .no-print {
-            margin-top: 20px;
-            text-align: center;
-          }
-          @media print {
-            .no-print { display: none; }
-          }
+          @media print { @page { margin: 0.5in; } }
+          body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+          .item-name { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+          .item-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+          .detail-row { padding: 10px; border-bottom: 1px solid #ddd; }
+          .detail-label { font-weight: bold; color: #555; font-size: 12px; text-transform: uppercase; }
+          .detail-value { font-size: 16px; margin-top: 5px; }
+          .codes { display: flex; justify-content: space-around; align-items: center; margin-top: 30px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; }
+          .code-item { text-align: center; }
+          .code-item img { max-width: 200px; height: auto; }
+          .code-label { font-weight: bold; margin-top: 10px; font-size: 14px; }
+          .no-print { margin-top: 20px; text-align: center; }
+          @media print { .no-print { display: none; } }
         </style>
       </head>
       <body>
         <div class="header">
-          <div class="item-name">${item.name}</div>
-          <div>${item.category_name || ''} ${item.sub_category_name ? '/ ' + item.sub_category_name : ''}</div>
+          <h1>Inventory Item Details</h1>
         </div>
-
+        <div class="item-name">${item.name}</div>
         <div class="item-details">
           <div class="detail-row">
-            <div class="detail-label">Location</div>
-            <div class="detail-value">${item.location}${item.shelf ? ' - ' + item.shelf : ''}</div>
+            <div class="detail-label">Category</div>
+            <div class="detail-value">${item.category_name || 'N/A'}</div>
           </div>
           <div class="detail-row">
-            <div class="detail-label">Barcode</div>
-            <div class="detail-value">${item.barcode}</div>
+            <div class="detail-label">Location</div>
+            <div class="detail-value">${item.location} ${item.shelf ? `- ${item.shelf}` : ''}</div>
           </div>
           <div class="detail-row">
             <div class="detail-label">Current Stock</div>
             <div class="detail-value">${item.current_stock}</div>
           </div>
           <div class="detail-row">
-            <div class="detail-label">Min Threshold</div>
-            <div class="detail-value">${item.min_threshold}</div>
-          </div>
-          <div class="detail-row">
             <div class="detail-label">Status</div>
             <div class="detail-value">${item.status}</div>
           </div>
-          <div class="detail-row">
+          <div class="detail-row" style="grid-column: span 2;">
             <div class="detail-label">Description</div>
-            <div class="detail-value">${item.description || 'N/A'}</div>
+            <div class="detail-value">${item.description || 'No description'}</div>
           </div>
         </div>
-
-        ${item.barcode_image_url || item.qr_image_url ? `
-          <div class="codes">
-            ${item.barcode_image_url ? `
-              <div class="code-item">
-                <img src="${window.location.origin}${item.barcode_image_url}" alt="Barcode" />
-                <div class="code-label">Barcode</div>
-              </div>
-            ` : ''}
-            ${item.qr_image_url ? `
-              <div class="code-item">
-                <img src="${window.location.origin}${item.qr_image_url}" alt="QR Code" />
-                <div class="code-label">QR Code</div>
-              </div>
-            ` : ''}
+        <div class="codes">
+          <div class="code-item">
+            <img src="${item.barcode_image_url}" alt="Barcode" />
+            <div class="code-label">${item.barcode}</div>
           </div>
-        ` : ''}
-
+          ${item.qr_image_url ? `
+          <div class="code-item">
+            <img src="${item.qr_image_url}" alt="QR Code" />
+            <div class="code-label">QR Code</div>
+          </div>
+          ` : ''}
+        </div>
         <div class="no-print">
-          <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Print</button>
-          <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; margin-left: 10px;">Close</button>
+          <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Print Page</button>
         </div>
-
-        <script>
-          // Auto-print on mobile
-          if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            setTimeout(() => window.print(), 500);
-          }
-        </script>
       </body>
       </html>
     `;
-
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
 
-  const handleExport = () => {
-    if (!inventory.length) return;
-
-    const headers = ['Name', 'Barcode', 'Location', 'Category', 'Sub Category', 'Shelf', 'Stock', 'Min Threshold', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...inventory.map(item => [
-        `"${item.name}"`,
-        item.barcode,
-        `"${item.location}"`,
-        `"${item.category_name || ''}"`,
-        `"${item.sub_category_name || ''}"`,
-        `"${item.shelf || ''}"`,
-        item.current_stock,
-        item.min_threshold,
-        item.status
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `inventory_export_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'In Stock': return 'bg-green-100 text-green-800';
+      case 'Low Stock': return 'bg-yellow-100 text-yellow-800';
+      case 'Out of Stock': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusBadge = (status) => {
-    const colors = {
-      'In Stock': 'bg-green-100 text-green-800',
-      'Low Stock': 'bg-yellow-100 text-yellow-800',
-      'Out of Stock': 'bg-red-100 text-red-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
   return (
-    <div>
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-gray-900">Inventory Management</h1>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+        >
+          <i className="fas fa-plus mr-2"></i> Add Item
+        </button>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="text"
-            placeholder="Search..."
-            className="px-3 py-2 border rounded"
+            placeholder="Search inventory..."
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select
-            className="px-3 py-2 border rounded"
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <option value="">All Status</option>
+            <option value="In Stock">In Stock</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+          </select>
+          <select
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
             value={warehouseFilter}
-            onChange={(e) => {
-              setWarehouseFilter(e.target.value);
-              setShelfFilter('');
-              setColumnFilter('');
-            }}
+            onChange={(e) => setWarehouseFilter(e.target.value)}
           >
             <option value="">All Warehouses</option>
             <option value="Small">Small Warehouse</option>
             <option value="Large">Large Warehouse</option>
           </select>
-          <select
-            className="px-3 py-2 border rounded"
-            value={shelfFilter}
-            onChange={(e) => {
-              setShelfFilter(e.target.value);
-              setColumnFilter('');
-            }}
-            disabled={!warehouseFilter}
-          >
-            <option value="">All Rows</option>
-            {searchRows.map((r, i) => (
-              <option key={i} value={r.name}>{r.name}</option>
-            ))}
-          </select>
-          <select
-            className="px-3 py-2 border rounded"
-            value={columnFilter}
-            onChange={(e) => setColumnFilter(e.target.value)}
-            disabled={!shelfFilter}
-          >
-            <option value="">All Columns</option>
-            {searchCols.map((c, i) => (
-              <option key={i} value={c}>{c}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="Part/Product..."
-            className="px-3 py-2 border rounded"
-            value={partNumberFilter}
-            onChange={(e) => setPartNumberFilter(e.target.value)}
-          />
-          <select
-            className="px-3 py-2 border rounded"
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-          >
-            <option value="">All Status</option>
-            <option value="in">In Stock</option>
-            <option value="low">Low Stock</option>
-            <option value="out">Out of Stock</option>
-          </select>
-        </div>
-        <div className="flex justify-end mt-4 space-x-4">
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
-          >
-            <i className="fas fa-file-export mr-2"></i> Export CSV
-          </button>
-          <button
-            onClick={() => { resetForm(); setShowModal(true); }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-          >
-            <i className="fas fa-plus mr-2"></i> Add Item
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Row"
+              className="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+              value={shelfFilter}
+              onChange={(e) => setShelfFilter(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Col"
+              className="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+              value={columnFilter}
+              onChange={(e) => setColumnFilter(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-max">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
@@ -677,25 +629,13 @@ const Inventory = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        <button
-                          onClick={() => printItem(item)}
-                          className="text-gray-600 hover:text-gray-900"
-                          title="Print"
-                        >
+                        <button onClick={() => printItem(item)} className="text-gray-600 hover:text-gray-900" title="Print">
                           <i className="fas fa-print"></i>
                         </button>
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Edit"
-                        >
+                        <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-900" title="Edit">
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete"
-                        >
+                        <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900" title="Delete">
                           <i className="fas fa-trash"></i>
                         </button>
                       </td>
@@ -708,7 +648,6 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Add/Edit Item Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
@@ -811,15 +750,45 @@ const Inventory = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Column</label>
-                  <input
-                    type="text"
-                    name="shelfColumn"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                    value={formData.shelfColumn}
-                    onChange={handleInputChange}
-                    placeholder="from [col_number] to [col number]"
+                  {mainColumnBuilder.map((col, index) => (
+                    <div key={col.id} className="flex items-center gap-2 mt-1">
+                      {index > 0 && (
+                        <select
+                          className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm w-20"
+                          value={col.relation}
+                          onChange={(e) => updateMainColumnBuilder(index, 'relation', e.target.value)}
+                        >
+                          <option value="To">To</option>
+                          <option value="And">And</option>
+                        </select>
+                      )}
+                      <input
+                        type="text"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                        value={col.value}
+                        onChange={(e) => updateMainColumnBuilder(index, 'value', e.target.value)}
+                        placeholder={index === 0 ? "e.g. 1" : "e.g. 5"}
+                        disabled={!formData.shelf}
+                      />
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMainColumn(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addMainColumn}
+                    className="mt-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
                     disabled={!formData.shelf}
-                  />
+                  >
+                    + Add Col
+                  </button>
                 </div>
               </div>
 
@@ -848,9 +817,6 @@ const Inventory = () => {
                   </button>
                 </div>
                 {formData.additionalLocations.map((loc, index) => {
-                  const locRows = loc.warehouse ? layouts[loc.warehouse] || [] : [];
-                  const locCols = (loc.warehouse && loc.shelf) ? locRows.find(r => r.name === loc.shelf)?.columnNames || [] : [];
-
                   return (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 rounded border">
                       <div>
@@ -878,14 +844,45 @@ const Inventory = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Column</label>
-                        <input
-                          type="text"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
-                          value={loc.shelfColumn}
-                          onChange={(e) => handleLocationChange(index, 'shelfColumn', e.target.value)}
-                          placeholder="from [col_number] to [col number]"
+                        {(loc.columnBuilder || [{ id: 'init', value: '', relation: 'To' }]).map((col, colIndex) => (
+                          <div key={col.id} className="flex items-center gap-2 mt-1">
+                            {colIndex > 0 && (
+                              <select
+                                className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm w-20"
+                                value={col.relation}
+                                onChange={(e) => updateAddLocationColumnBuilder(index, colIndex, 'relation', e.target.value)}
+                              >
+                                <option value="To">To</option>
+                                <option value="And">And</option>
+                              </select>
+                            )}
+                            <input
+                              type="text"
+                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                              value={col.value}
+                              onChange={(e) => updateAddLocationColumnBuilder(index, colIndex, 'value', e.target.value)}
+                              placeholder={colIndex === 0 ? "e.g. 1" : "e.g. 5"}
+                              disabled={!loc.shelf}
+                            />
+                            {colIndex > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => removeAddLocationColumn(index, colIndex)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addAddLocationColumn(index)}
+                          className="mt-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
                           disabled={!loc.shelf}
-                        />
+                        >
+                          + Add Col
+                        </button>
                       </div>
                       <div className="flex items-end">
                         <button
@@ -964,22 +961,17 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Image Gallery Modal */}
       {showGallery && galleryItem && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
               <h3 className="text-xl font-semibold text-gray-900">{galleryItem.name}</h3>
-              <button
-                onClick={() => setShowGallery(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
+              <button onClick={() => setShowGallery(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
             <div className="p-6">
-              {/* Item Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-gray-50 p-3 rounded">
                   <span className="block text-xs text-gray-500 uppercase font-semibold">Location</span>
@@ -1001,9 +993,7 @@ const Inventory = () => {
                 </div>
               </div>
 
-              {/* Images Grid */}
               {(() => {
-                // Create a NEW array to avoid mutating galleryItem.image_urls
                 let images = [...(galleryItem.image_urls || [])];
                 if (galleryItem.image_url && !images.includes(galleryItem.image_url)) {
                   images = [galleryItem.image_url, ...images];
@@ -1026,62 +1016,22 @@ const Inventory = () => {
                               e.stopPropagation();
                               handleDeleteImage(galleryItem.id, img);
                             }}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
-                            title="Delete image"
+                            className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                            title="Delete Image"
                           >
-                            <i className="fas fa-trash text-sm"></i>
+                            <i className="fas fa-trash text-xs"></i>
                           </button>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-10 text-gray-500">
                     <i className="fas fa-image text-4xl mb-2"></i>
                     <p>No images available</p>
                   </div>
                 );
               })()}
-
-              {/* Barcode and QR Code */}
-              {(galleryItem.barcode_image_url || galleryItem.qr_image_url) && (
-                <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-semibold mb-3 text-gray-700">Codes</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {galleryItem.barcode_image_url && (
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">Barcode</p>
-                        <img
-                          src={galleryItem.barcode_image_url}
-                          alt="Barcode"
-                          className="mx-auto max-h-20 cursor-pointer hover:opacity-75"
-                          onClick={() => window.open(galleryItem.barcode_image_url, '_blank')}
-                        />
-                        <p className="text-xs text-gray-500 mt-2 font-mono">{galleryItem.barcode}</p>
-                      </div>
-                    )}
-                    {galleryItem.qr_image_url && (
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">QR Code</p>
-                        <img
-                          src={galleryItem.qr_image_url}
-                          alt="QR Code"
-                          className="mx-auto max-h-32 cursor-pointer hover:opacity-75"
-                          onClick={() => window.open(galleryItem.qr_image_url, '_blank')}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Description */}
-              {galleryItem.description && (
-                <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-semibold mb-2 text-gray-700">Description</h4>
-                  <p className="text-gray-600">{galleryItem.description}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
