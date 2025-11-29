@@ -7,6 +7,7 @@ import Users from './pages/Users';
 import Transactions from './pages/Transactions';
 import Suppliers from './pages/Suppliers';
 import EmailFormats from './pages/EmailFormats';
+import WarehouseLayout from './pages/WarehouseLayout';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuthStore from './stores/authStore';
@@ -20,7 +21,7 @@ function App() {
         <Route path="/login" element={
           isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
         } />
-        
+
         <Route path="/" element={
           <ProtectedRoute>
             <Layout />
@@ -34,6 +35,7 @@ function App() {
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="email-formats" element={<EmailFormats />} />
           <Route path="users" element={<Users />} />
+          <Route path="settings/layout" element={<WarehouseLayout />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

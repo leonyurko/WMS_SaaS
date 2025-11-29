@@ -6,16 +6,38 @@ const Transactions = () => {
   const { setPageTitle } = useOutletContext();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    type: ''
+    type: '',
+    productId: '',
+    userId: ''
   });
 
   useEffect(() => {
     setPageTitle('Inventory History');
     loadTransactions();
+    loadFiltersData();
   }, [setPageTitle, filters]);
+
+  const loadFiltersData = async () => {
+    try {
+      const [productsRes, usersRes] = await Promise.all([
+        api.get('/inventory'),
+        api.get('/users')
+      ]);
+      if (productsRes.data.status === 'success') {
+        setProducts(productsRes.data.data.items);
+      }
+      if (usersRes.data.status === 'success') {
+        setUsers(usersRes.data.data.users);
+      }
+    } catch (err) {
+      console.error('Failed to load filter data', err);
+    }
+  };
 
   const loadTransactions = async () => {
     try {
@@ -23,7 +45,9 @@ const Transactions = () => {
       const params = {};
       if (filters.dateFrom) params.dateFrom = filters.dateFrom;
       if (filters.dateTo) params.dateTo = filters.dateTo;
-      
+      if (filters.productId) params.productId = filters.productId;
+      if (filters.userId) params.userId = filters.userId;
+
       const response = await api.get('/transactions', { params });
       if (response.data.status === 'success') {
         setTransactions(response.data.data.transactions);
@@ -51,7 +75,7 @@ const Transactions = () => {
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="flex gap-4 items-end">
+        <div className="flex gap-4 items-end flex-wrap">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
             <input
@@ -72,13 +96,41 @@ const Transactions = () => {
               onChange={handleFilterChange}
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
+            <select
+              name="productId"
+              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.productId}
+              onChange={handleFilterChange}
+            >
+              <option value="">All Products</option>
+              {products.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+            <select
+              name="userId"
+              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.userId}
+              onChange={handleFilterChange}
+            >
+              <option value="">All Users</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.username}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex-1 text-right">
-             <button 
-               onClick={() => setFilters({ dateFrom: '', dateTo: '', type: '' })}
-               className="text-sm text-gray-500 hover:text-gray-700 underline"
-             >
-               Clear Filters
-             </button>
+            <button
+              onClick={() => setFilters({ dateFrom: '', dateTo: '', type: '', productId: '', userId: '' })}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       </div>

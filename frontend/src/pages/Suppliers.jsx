@@ -16,14 +16,17 @@ const Suppliers = () => {
   const [currentSupplier, setCurrentSupplier] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [emailFormats, setEmailFormats] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     contactPerson: '',
     phone: '',
     email: '',
     location: '',
-    notes: ''
+    notes: '',
+    operatingHours: '',
+    additionalPhones: [],
+    additionalEmails: []
   });
 
   const [orderData, setOrderData] = useState({
@@ -88,9 +91,44 @@ const Suppliers = () => {
     setOrderData(prev => ({ ...prev, [name]: value }));
   };
 
+  const addPhone = () => {
+    setFormData(prev => ({ ...prev, additionalPhones: [...prev.additionalPhones, ''] }));
+  };
+
+  const removePhone = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      additionalPhones: prev.additionalPhones.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handlePhoneChange = (index, value) => {
+    const newPhones = [...formData.additionalPhones];
+    newPhones[index] = value;
+    setFormData(prev => ({ ...prev, additionalPhones: newPhones }));
+  };
+
+  const addEmail = () => {
+    setFormData(prev => ({ ...prev, additionalEmails: [...prev.additionalEmails, ''] }));
+  };
+
+  const removeEmail = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      additionalEmails: prev.additionalEmails.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleEmailChange = (index, value) => {
+    const newEmails = [...formData.additionalEmails];
+    newEmails[index] = value;
+    setFormData(prev => ({ ...prev, additionalEmails: newEmails }));
+  };
+
   const resetForm = () => {
     setFormData({
-      name: '', contactPerson: '', phone: '', email: '', location: '', notes: ''
+      name: '', contactPerson: '', phone: '', email: '', location: '', notes: '',
+      operatingHours: '', additionalPhones: [], additionalEmails: []
     });
     setIsEditing(false);
     setCurrentId(null);
@@ -103,7 +141,10 @@ const Suppliers = () => {
       phone: supplier.phone || '',
       email: supplier.email,
       location: supplier.location || '',
-      notes: supplier.notes || ''
+      notes: supplier.notes || '',
+      operatingHours: supplier.operating_hours || '',
+      additionalPhones: supplier.additional_phones || [],
+      additionalEmails: supplier.additional_emails || []
     });
     setCurrentId(supplier.id);
     setIsEditing(true);
@@ -249,14 +290,14 @@ const Suppliers = () => {
                       </button>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button 
+                      <button
                         onClick={() => handleEdit(supplier)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Edit"
                       >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(supplier.id)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete"
@@ -284,7 +325,7 @@ const Suppliers = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Supplier Name *</label>
@@ -294,6 +335,18 @@ const Suppliers = () => {
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                   value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Operating Hours</label>
+                <input
+                  type="text"
+                  name="operatingHours"
+                  placeholder="e.g. Mon-Fri 9:00-17:00"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  value={formData.operatingHours}
                   onChange={handleInputChange}
                 />
               </div>
@@ -310,7 +363,7 @@ const Suppliers = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
                   <input
                     type="text"
                     name="phone"
@@ -321,8 +374,38 @@ const Suppliers = () => {
                 </div>
               </div>
 
+              {/* Additional Phones */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Phones</label>
+                {formData.additionalPhones.map((phone, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={phone}
+                      onChange={(e) => handlePhoneChange(index, e.target.value)}
+                      placeholder="Phone number"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhone(index)}
+                      className="text-red-500 hover:text-red-700 px-2"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addPhone}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  + Add Phone
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Primary Email *</label>
                 <input
                   type="email"
                   name="email"
@@ -331,6 +414,36 @@ const Suppliers = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                 />
+              </div>
+
+              {/* Additional Emails */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Emails</label>
+                {formData.additionalEmails.map((email, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="email"
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={email}
+                      onChange={(e) => handleEmailChange(index, e.target.value)}
+                      placeholder="Email address"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeEmail(index)}
+                      className="text-red-500 hover:text-red-700 px-2"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addEmail}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  + Add Email
+                </button>
               </div>
 
               <div>
@@ -387,7 +500,7 @@ const Suppliers = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             {!emailPreview ? (
               <div className="space-y-4">
                 <div>
@@ -470,11 +583,11 @@ const Suppliers = () => {
                   </div>
                   <div className="mb-4">
                     <label className="block text-xs font-medium text-gray-500 uppercase">Subject:</label>
-                    <p className="text-sm font-medium" dir="rtl" style={{textAlign: 'right'}}>{emailPreview.subject}</p>
+                    <p className="text-sm font-medium" dir="rtl" style={{ textAlign: 'right' }}>{emailPreview.subject}</p>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Body:</label>
-                    <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap" dir="rtl" style={{textAlign: 'right'}}>
+                    <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap" dir="rtl" style={{ textAlign: 'right' }}>
                       {emailPreview.body}
                     </div>
                   </div>

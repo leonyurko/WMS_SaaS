@@ -7,10 +7,10 @@ const { generateBothCodes } = require('../services/codeGeneratorService');
  */
 const getAllInventory = async (req, res, next) => {
   try {
-    const { search, category, status, page, limit } = req.query;
+    const { search, category, status, page, limit, warehouse, shelf, shelfColumn, partNumber } = req.query;
 
     const result = await inventoryService.getAllInventory(
-      { search, category, status },
+      { search, category, status, warehouse, shelf, shelfColumn, partNumber },
       { page, limit }
     );
 

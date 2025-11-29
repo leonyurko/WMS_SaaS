@@ -90,6 +90,24 @@ const Dashboard = () => {
             bgColor="bg-purple-100"
           />
         </Link>
+        <Link to="/inventory?warehouse=Small">
+          <KPICard
+            title="Small Warehouse"
+            value="View"
+            icon="fa-warehouse"
+            iconColor="text-indigo-500"
+            bgColor="bg-indigo-100"
+          />
+        </Link>
+        <Link to="/inventory?warehouse=Large">
+          <KPICard
+            title="Large Warehouse"
+            value="View"
+            icon="fa-industry"
+            iconColor="text-teal-500"
+            bgColor="bg-teal-100"
+          />
+        </Link>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">

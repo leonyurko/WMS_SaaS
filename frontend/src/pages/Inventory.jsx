@@ -10,10 +10,20 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+
+  // Advanced Search State
+  const [warehouseFilter, setWarehouseFilter] = useState(searchParams.get('warehouse') || '');
+  const [shelfFilter, setShelfFilter] = useState('');
+  const [columnFilter, setColumnFilter] = useState('');
+  const [partNumberFilter, setPartNumberFilter] = useState('');
+
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [categories, setCategories] = useState([]);
+
+  // Layout State
+  const [layouts, setLayouts] = useState({ Small: [], Large: [] });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -22,8 +32,9 @@ const Inventory = () => {
     categoryId: '',
     subCategoryId: '',
     shelf: '',
+    shelfColumn: '',
     quantity: 0,
-    location: '',
+    location: '', // Warehouse
     minQuantity: 5,
     images: []
   });
@@ -36,12 +47,35 @@ const Inventory = () => {
     setPageTitle('Inventory');
     loadInventory();
     loadCategories();
-  }, [setPageTitle, statusFilter]);
+    fetchLayouts();
+  }, [setPageTitle, statusFilter, warehouseFilter, shelfFilter, columnFilter, partNumberFilter]);
+
+  const fetchLayouts = async () => {
+    try {
+      const [smallRes, largeRes] = await Promise.all([
+        api.get('/layouts/Small'),
+        api.get('/layouts/Large')
+      ]);
+      setLayouts({
+        Small: smallRes.data.data.structure || [],
+        Large: largeRes.data.data.structure || []
+      });
+    } catch (err) {
+      console.error('Failed to fetch layouts', err);
+    }
+  };
 
   const loadInventory = async () => {
     try {
       setLoading(true);
-      const data = await fetchInventory({ search, status: statusFilter });
+      const data = await fetchInventory({
+        search,
+        status: statusFilter,
+        warehouse: warehouseFilter,
+        shelf: shelfFilter,
+        shelfColumn: columnFilter,
+        partNumber: partNumberFilter
+      });
       setInventory(data.items);
     } catch (err) {
       console.error('Failed to load inventory:', err);
@@ -74,6 +108,13 @@ const Inventory = () => {
   const parentCategories = categories.filter(c => !c.parent_id);
   const subCategories = categories.filter(c => c.parent_id === formData.categoryId);
 
+  // Helper for dynamic dropdowns
+  const searchRows = warehouseFilter ? layouts[warehouseFilter] || [] : [];
+  const searchCols = (warehouseFilter && shelfFilter) ? searchRows.find(r => r.name === shelfFilter)?.columnNames || [] : [];
+
+  const formRows = formData.location ? layouts[formData.location] || [] : [];
+  const formCols = (formData.location && formData.shelf) ? formRows.find(r => r.name === formData.shelf)?.columnNames || [] : [];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => {
@@ -93,7 +134,7 @@ const Inventory = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '', description: '', categoryId: '', subCategoryId: '', shelf: '',
+      name: '', description: '', categoryId: '', subCategoryId: '', shelf: '', shelfColumn: '',
       quantity: 0, location: '', minQuantity: 5, images: []
     });
     setIsEditing(false);
@@ -107,6 +148,7 @@ const Inventory = () => {
       categoryId: item.category_id || '',
       subCategoryId: item.sub_category_id || '',
       shelf: item.shelf || '',
+      shelfColumn: item.shelf_column || '',
       quantity: item.current_stock,
       location: item.location || '',
       minQuantity: item.min_threshold,
@@ -202,6 +244,7 @@ const Inventory = () => {
       if (formData.categoryId) data.append('categoryId', formData.categoryId);
       if (formData.subCategoryId) data.append('subCategoryId', formData.subCategoryId);
       if (formData.shelf) data.append('shelf', formData.shelf);
+      if (formData.shelfColumn) data.append('shelfColumn', formData.shelfColumn);
       data.append('location', formData.location);
       data.append('minThreshold', formData.minQuantity);
 
@@ -426,18 +469,62 @@ const Inventory = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex-1 max-w-md flex gap-4">
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <input
             type="text"
-            placeholder="Search inventory..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search..."
+            className="px-3 py-2 border rounded"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && loadInventory()}
           />
           <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border rounded"
+            value={warehouseFilter}
+            onChange={(e) => {
+              setWarehouseFilter(e.target.value);
+              setShelfFilter('');
+              setColumnFilter('');
+            }}
+          >
+            <option value="">All Warehouses</option>
+            <option value="Small">Small Warehouse</option>
+            <option value="Large">Large Warehouse</option>
+          </select>
+          <select
+            className="px-3 py-2 border rounded"
+            value={shelfFilter}
+            onChange={(e) => {
+              setShelfFilter(e.target.value);
+              setColumnFilter('');
+            }}
+            disabled={!warehouseFilter}
+          >
+            <option value="">All Rows</option>
+            {searchRows.map((r, i) => (
+              <option key={i} value={r.name}>{r.name}</option>
+            ))}
+          </select>
+          <select
+            className="px-3 py-2 border rounded"
+            value={columnFilter}
+            onChange={(e) => setColumnFilter(e.target.value)}
+            disabled={!shelfFilter}
+          >
+            <option value="">All Columns</option>
+            {searchCols.map((c, i) => (
+              <option key={i} value={c}>{c}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Part/Product..."
+            className="px-3 py-2 border rounded"
+            value={partNumberFilter}
+            onChange={(e) => setPartNumberFilter(e.target.value)}
+          />
+          <select
+            className="px-3 py-2 border rounded"
             value={statusFilter}
             onChange={handleStatusFilterChange}
           >
@@ -447,7 +534,7 @@ const Inventory = () => {
             <option value="out">Out of Stock</option>
           </select>
         </div>
-        <div className="flex space-x-4 ml-4">
+        <div className="flex justify-end mt-4 space-x-4">
           <button
             onClick={handleExport}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
@@ -650,27 +737,56 @@ const Inventory = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700">Warehouse</label>
+                  <select
                     name="location"
                     required
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     value={formData.location}
-                    onChange={handleInputChange}
-                  />
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setFormData(prev => ({ ...prev, shelf: '', shelfColumn: '' }));
+                    }}
+                  >
+                    <option value="">Select Warehouse</option>
+                    <option value="Small">Small Warehouse</option>
+                    <option value="Large">Large Warehouse</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Shelf</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700">Row (Shelf)</label>
+                  <select
                     name="shelf"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     value={formData.shelf}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setFormData(prev => ({ ...prev, shelfColumn: '' }));
+                    }}
+                    disabled={!formData.location}
+                  >
+                    <option value="">Select Row</option>
+                    {formRows.map((r, i) => (
+                      <option key={i} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Column</label>
+                  <select
+                    name="shelfColumn"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    value={formData.shelfColumn}
                     onChange={handleInputChange}
-                  />
+                    disabled={!formData.shelf}
+                  >
+                    <option value="">Select Column</option>
+                    {formCols.map((c, i) => (
+                      <option key={i} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

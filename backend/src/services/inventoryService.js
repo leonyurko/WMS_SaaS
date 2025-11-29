@@ -34,6 +34,34 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
     whereConditions.push('i.current_stock > i.min_threshold');
   }
 
+  // Warehouse filter (Location)
+  if (filters.warehouse) {
+    whereConditions.push(`i.location = $${paramCount}`);
+    params.push(filters.warehouse);
+    paramCount++;
+  }
+
+  // Shelf filter (Row)
+  if (filters.shelf) {
+    whereConditions.push(`i.shelf = $${paramCount}`);
+    params.push(filters.shelf);
+    paramCount++;
+  }
+
+  // Shelf Column filter
+  if (filters.shelfColumn) {
+    whereConditions.push(`i.shelf_column = $${paramCount}`);
+    params.push(filters.shelfColumn);
+    paramCount++;
+  }
+
+  // Part Number filter (Barcode or Name)
+  if (filters.partNumber) {
+    whereConditions.push(`(i.barcode ILIKE $${paramCount} OR i.name ILIKE $${paramCount})`);
+    params.push(`%${filters.partNumber}%`);
+    paramCount++;
+  }
+
   const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
   // Get total count
@@ -138,8 +166,8 @@ const createInventory = async (data, barcode, codeImages = {}) => {
 
   const result = await query(
     `INSERT INTO inventory 
-      (name, location, category_id, sub_category_id, shelf, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      (name, location, category_id, sub_category_id, shelf, shelf_column, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     RETURNING *`,
     [
       name,
@@ -147,6 +175,7 @@ const createInventory = async (data, barcode, codeImages = {}) => {
       categoryId || null,
       subCategoryId || null,
       shelf || null,
+      data.shelfColumn || null,
       description || null,
       imageUrl || null,
       imageUrls ? JSON.stringify(imageUrls) : '[]',
@@ -188,6 +217,10 @@ const updateInventory = async (id, data) => {
   if (data.shelf !== undefined) {
     fields.push(`shelf = $${paramCount++}`);
     values.push(data.shelf || null);
+  }
+  if (data.shelfColumn !== undefined) {
+    fields.push(`shelf_column = $${paramCount++}`);
+    values.push(data.shelfColumn || null);
   }
   if (data.description !== undefined) {
     fields.push(`description = $${paramCount++}`);

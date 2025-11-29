@@ -60,13 +60,23 @@ const getSupplierById = async (id) => {
  * Create new supplier
  */
 const createSupplier = async (data) => {
-  const { name, contactPerson, phone, email, location, notes } = data;
+  const { name, contactPerson, phone, email, location, notes, operatingHours, additionalPhones, additionalEmails } = data;
 
   const result = await query(
-    `INSERT INTO suppliers (name, contact_person, phone, email, location, notes)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO suppliers (name, contact_person, phone, email, location, notes, operating_hours, additional_phones, additional_emails)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING *`,
-    [name, contactPerson || null, phone || null, email, location || null, notes || null]
+    [
+      name,
+      contactPerson || null,
+      phone || null,
+      email,
+      location || null,
+      notes || null,
+      operatingHours || null,
+      JSON.stringify(additionalPhones || []),
+      JSON.stringify(additionalEmails || [])
+    ]
   );
 
   return result.rows[0];
@@ -103,6 +113,18 @@ const updateSupplier = async (id, data) => {
   if (data.notes !== undefined) {
     fields.push(`notes = $${paramCount++}`);
     values.push(data.notes || null);
+  }
+  if (data.operatingHours !== undefined) {
+    fields.push(`operating_hours = $${paramCount++}`);
+    values.push(data.operatingHours || null);
+  }
+  if (data.additionalPhones !== undefined) {
+    fields.push(`additional_phones = $${paramCount++}`);
+    values.push(JSON.stringify(data.additionalPhones || []));
+  }
+  if (data.additionalEmails !== undefined) {
+    fields.push(`additional_emails = $${paramCount++}`);
+    values.push(JSON.stringify(data.additionalEmails || []));
   }
   if (data.isActive !== undefined) {
     fields.push(`is_active = $${paramCount++}`);

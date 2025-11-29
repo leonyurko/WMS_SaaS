@@ -16,6 +16,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const emailFormatRoutes = require('./routes/emailFormatRoutes');
+const layoutRoutes = require('./routes/layoutRoutes');
 
 const path = require('path');
 
@@ -76,6 +77,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/email-formats', emailFormatRoutes);
+app.use('/api/layouts', layoutRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -88,7 +90,7 @@ const startServer = async () => {
   try {
     // Test database connection
     const dbConnected = await testConnection();
-    
+
     if (!dbConnected) {
       console.error('❌ Failed to connect to database. Exiting...');
       process.exit(1);
