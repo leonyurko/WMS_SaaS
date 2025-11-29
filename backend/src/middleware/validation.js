@@ -62,9 +62,12 @@ const schemas = {
     categoryId: Joi.string().uuid().allow(null, ''),
     subCategoryId: Joi.string().uuid().allow(null, ''),
     shelf: Joi.string().max(50).allow(null, ''),
+    shelfColumn: Joi.string().allow(null, ''),
     description: Joi.string().allow(null, ''),
     currentStock: Joi.number().integer().min(0).required(),
-    minThreshold: Joi.number().integer().min(0).default(10)
+    minThreshold: Joi.number().integer().min(0).default(10),
+    additionalLocations: Joi.alternatives().try(Joi.string(), Joi.array()).allow(null, ''),
+    locationDetails: Joi.string().allow(null, '')
   }),
 
   // Inventory update validation
@@ -74,10 +77,13 @@ const schemas = {
     categoryId: Joi.string().uuid().allow(null, ''),
     subCategoryId: Joi.string().uuid().allow(null, ''),
     shelf: Joi.string().max(50).allow(null, ''),
+    shelfColumn: Joi.string().allow(null, ''),
     description: Joi.string().allow(null, ''),
     minThreshold: Joi.number().integer().min(0),
     imageUrl: Joi.string().uri().allow(null, ''),
-    imageUrls: Joi.array().items(Joi.string().uri()).allow(null)
+    imageUrls: Joi.array().items(Joi.string().uri()).allow(null),
+    additionalLocations: Joi.alternatives().try(Joi.string(), Joi.array()).allow(null, ''),
+    locationDetails: Joi.string().allow(null, '')
   }).min(1),
 
   // Stock update validation

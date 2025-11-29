@@ -81,6 +81,16 @@ const createInventory = async (req, res, next) => {
   try {
     const data = req.body;
 
+    // Parse additionalLocations if it's a string (from FormData)
+    if (typeof data.additionalLocations === 'string') {
+      try {
+        data.additionalLocations = JSON.parse(data.additionalLocations);
+      } catch (e) {
+        console.error('Failed to parse additionalLocations:', e);
+        data.additionalLocations = [];
+      }
+    }
+
     // Barcode and imageUrl will be added by other middleware/services
     const barcode = req.barcode; // Set by barcode generation middleware
     const imageUrl = req.imageUrl; // Set by image upload middleware
@@ -118,6 +128,16 @@ const updateInventory = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
+
+    // Parse additionalLocations if it's a string (from FormData)
+    if (typeof data.additionalLocations === 'string') {
+      try {
+        data.additionalLocations = JSON.parse(data.additionalLocations);
+      } catch (e) {
+        console.error('Failed to parse additionalLocations:', e);
+        data.additionalLocations = [];
+      }
+    }
 
     // Check if item exists
     const existingItem = await inventoryService.getInventoryById(id);
