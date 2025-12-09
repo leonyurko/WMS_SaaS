@@ -7,7 +7,7 @@ const userService = require('../services/userService');
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await userService.getAllUsers();
-    
+
     res.json({
       status: 'success',
       data: { users }
@@ -56,8 +56,27 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+/**
+ * Create user
+ * POST /api/users
+ */
+const createUser = async (req, res, next) => {
+  try {
+    const userData = req.body;
+    const user = await userService.createUser(userData);
+
+    res.status(201).json({
+      status: 'success',
+      data: { user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
+  createUser,
   updateUser,
   deleteUser
 };

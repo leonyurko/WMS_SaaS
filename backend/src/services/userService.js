@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel');
+const { hashPassword } = require('../utils/auth');
 
 /**
  * Get all users
@@ -46,6 +47,28 @@ const updateUser = async (id, updates) => {
   const user = await userModel.findById(id);
   if (!user) {
     throw new Error('User not found');
+  }
+
+  // Check if username is being updated and if it's unique
+  if (updates.username && updates.username !== user.username) {
+    const existing = await userModel.findByUsername(updates.username);
+    if (existing) {
+      throw new Error('Username already exists');
+    }
+  }
+
+  // Check if email is being updated and if it's unique
+  if (updates.email && updates.email !== user.email) {
+    const existingEmail = await userModel.findByEmail(updates.email);
+    if (existingEmail) {
+      throw new Error('Email already exists');
+    }
+  }
+
+  // Hash password if provided
+  if (updates.password) {
+    updates.password_hash = await hashPassword(updates.password);
+    delete updates.password;
   }
 
   return await userModel.update(id, updates);

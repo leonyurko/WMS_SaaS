@@ -58,17 +58,17 @@ const findAll = async () => {
  */
 const create = async (userData) => {
   const { username, email, password, role } = userData;
-  
+
   // Hash password
   const passwordHash = await hashPassword(password);
-  
+
   const result = await query(
     `INSERT INTO users (username, email, password_hash, role) 
      VALUES ($1, $2, $3, $4) 
      RETURNING id, username, email, role, is_active, created_at, updated_at`,
     [username, email, passwordHash, role]
   );
-  
+
   return result.rows[0];
 };
 
@@ -96,20 +96,28 @@ const update = async (id, updates) => {
     fields.push(`email = $${paramCount++}`);
     values.push(updates.email);
   }
+  if (updates.username !== undefined) {
+    fields.push(`username = $${paramCount++}`);
+    values.push(updates.username);
+  }
+  if (updates.password_hash !== undefined) {
+    fields.push(`password_hash = $${paramCount++}`);
+    values.push(updates.password_hash);
+  }
 
   if (fields.length === 0) {
     throw new Error('No fields to update');
   }
 
   values.push(id);
-  
+
   const result = await query(
     `UPDATE users SET ${fields.join(', ')} 
      WHERE id = $${paramCount} 
      RETURNING id, username, email, role, is_active, created_at, updated_at`,
     values
   );
-  
+
   return result.rows[0];
 };
 

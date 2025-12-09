@@ -52,7 +52,9 @@ const schemas = {
   updateUser: Joi.object({
     role: Joi.string().valid('Admin', 'Manager', 'Staff'),
     isActive: Joi.boolean(),
-    email: Joi.string().email()
+    email: Joi.string().email(),
+    username: Joi.string().min(3).max(50),
+    password: Joi.string().min(6)
   }).min(1),
 
   // Inventory creation validation

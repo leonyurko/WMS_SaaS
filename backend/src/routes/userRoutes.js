@@ -9,7 +9,11 @@ router.use(authenticateToken);
 router.use(requireAdmin);
 
 // Get all users
+// Get all users
 router.get('/', userController.getAllUsers);
+
+// Create user
+router.post('/', validateRequest(schemas.register), userController.createUser);
 
 // Update user
 router.put('/:id', validateRequest(schemas.updateUser), userController.updateUser);
