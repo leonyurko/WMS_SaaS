@@ -53,6 +53,8 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                        style={{ direction: post.direction || 'ltr' }}
+                        dir={post.direction || 'ltr'}
                     />
                     <div className="flex justify-end space-x-2 mt-2">
                         <button
@@ -70,7 +72,11 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
                     </div>
                 </div>
             ) : (
-                <div className="text-gray-800 whitespace-pre-wrap mt-1">
+                <div
+                    className="text-gray-800 whitespace-pre-wrap mt-1"
+                    style={{ direction: post.direction || 'ltr' }}
+                    dir={post.direction || 'ltr'}
+                >
                     {post.content}
                 </div>
             )}

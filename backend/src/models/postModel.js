@@ -1,11 +1,11 @@
 const { query } = require('../config/database');
 
-const create = async (userId, content, type) => {
+const create = async (userId, content, type, direction = 'ltr') => {
     const result = await query(
-        `INSERT INTO posts (user_id, content, type) 
-     VALUES ($1, $2, $3) 
+        `INSERT INTO posts (user_id, content, type, direction) 
+     VALUES ($1, $2, $3, $4) 
      RETURNING *`,
-        [userId, content, type]
+        [userId, content, type, direction]
     );
     return result.rows[0];
 };

@@ -1,11 +1,11 @@
 const postModel = require('../models/postModel');
 
-const createPost = async (user, content, type) => {
+const createPost = async (user, content, type, direction = 'ltr') => {
     // Permission Check: Admin type posts can only be created by Admins
     if (type === 'admin' && user.role !== 'Admin') {
         throw new Error('Only admins can create admin updates');
     }
-    return await postModel.create(user.id, content, type);
+    return await postModel.create(user.id, content, type, direction);
 };
 
 const getPosts = async (type) => {

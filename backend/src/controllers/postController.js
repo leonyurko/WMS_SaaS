@@ -15,11 +15,11 @@ const getPosts = async (req, res) => {
 
 const createPost = async (req, res) => {
     try {
-        const { content, type } = req.body;
+        const { content, type, direction } = req.body;
         if (!content || !type) {
             return res.status(400).json({ message: 'Content and type are required' });
         }
-        const post = await postService.createPost(req.user, content, type);
+        const post = await postService.createPost(req.user, content, type, direction);
         res.status(201).json(post);
     } catch (err) {
         res.status(403).json({ message: err.message });
