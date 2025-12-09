@@ -1169,7 +1169,19 @@ const InventoryCard = ({ item, getStatusBadge, openGallery, printItem, handleEdi
             </div>
             <div>
               <span className="block text-gray-500 text-xs uppercase">Barcode</span>
-              <span className="font-medium">{item.barcode}</span>
+              {item.barcode_image_url ? (
+                <div className="mt-1">
+                  <img
+                    src={item.barcode_image_url}
+                    alt="Barcode"
+                    className="h-10 w-auto cursor-pointer"
+                    onClick={() => window.open(item.barcode_image_url, '_blank')}
+                  />
+                  <span className="text-xs text-gray-400 block mt-1">{item.barcode}</span>
+                </div>
+              ) : (
+                <span className="font-medium">{item.barcode}</span>
+              )}
             </div>
           </div>
 
