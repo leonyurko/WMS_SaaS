@@ -592,7 +592,8 @@ const Inventory = () => {
         </div>
       ) : (
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -688,6 +689,21 @@ const Inventory = () => {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            {inventory.map((item) => (
+              <InventoryCard
+                key={item.id}
+                item={item}
+                getStatusBadge={getStatusBadge}
+                openGallery={openGallery}
+                printItem={printItem}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -1084,6 +1100,99 @@ const Inventory = () => {
           </div>
         )
       }
+    </div>
+  );
+};
+
+const InventoryCard = ({ item, getStatusBadge, openGallery, printItem, handleEdit, handleDelete }) => {
+  const [expanded, setExpanded] = useState(false);
+  const images = item.image_urls || [];
+  const hasMultipleImages = images.length > 1;
+
+  return (
+    <div className="border-b border-gray-200 last:border-0">
+      <div
+        className="p-4 flex justify-between items-center cursor-pointer bg-white active:bg-gray-50"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-1">
+            <h4 className="font-semibold text-gray-900">{item.name}</h4>
+            <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusBadge(item.status)}`}>
+              {item.status}
+            </span>
+          </div>
+          <div className="text-sm text-gray-500">
+            {item.location} {item.shelf && `- ${item.shelf}`}
+          </div>
+        </div>
+        <div className="ml-3">
+          <i className={`fas fa-chevron-down transform transition-transform text-gray-400 ${expanded ? 'rotate-180' : ''}`}></i>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3 animation-fade-in">
+          {/* Images Check */}
+          <div className="flex justify-center mb-4">
+            {item.image_url || images.length > 0 ? (
+              <div
+                className="relative cursor-pointer"
+                onClick={() => openGallery(item)}
+              >
+                <img
+                  src={images[0] || item.image_url}
+                  alt={item.name}
+                  className="h-32 w-32 object-cover rounded-lg shadow-sm"
+                />
+                {hasMultipleImages && (
+                  <span className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                    +{images.length - 1}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="h-24 w-24 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                <i className="fas fa-image fa-2x"></i>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="block text-gray-500 text-xs uppercase">Category</span>
+              <span className="font-medium">{item.category_name}</span>
+            </div>
+            <div>
+              <span className="block text-gray-500 text-xs uppercase">Stock</span>
+              <span className="font-medium">{item.current_stock}</span>
+            </div>
+            <div>
+              <span className="block text-gray-500 text-xs uppercase">Barcode</span>
+              <span className="font-medium">{item.barcode}</span>
+            </div>
+          </div>
+
+          {item.description && (
+            <div>
+              <span className="block text-gray-500 text-xs uppercase mb-1">Description</span>
+              <p className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-200">{item.description}</p>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-3 border-t border-gray-200 mt-2">
+            <button onClick={() => printItem(item)} className="p-2 text-gray-600 hover:text-gray-900 bg-white rounded border border-gray-300 shadow-sm" title="Print">
+              <i className="fas fa-print"></i>
+            </button>
+            <button onClick={() => handleEdit(item)} className="p-2 text-blue-600 hover:text-blue-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
+              <i className="fas fa-edit"></i>
+            </button>
+            <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">
+              <i className="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
