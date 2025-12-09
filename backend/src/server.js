@@ -17,6 +17,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const emailFormatRoutes = require('./routes/emailFormatRoutes');
 const layoutRoutes = require('./routes/layoutRoutes');
+const postRoutes = require('./routes/postRoutes');
 
 const path = require('path');
 
@@ -78,6 +79,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/email-formats', emailFormatRoutes);
 app.use('/api/layouts', layoutRoutes);
+app.use('/api/posts', postRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

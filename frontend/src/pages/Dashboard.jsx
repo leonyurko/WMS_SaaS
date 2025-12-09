@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import KPICard from '../components/KPICard';
+import PostFeed from '../components/dashboard/PostFeed';
 import { fetchDashboardMetrics } from '../services/dashboardService';
 
 const Dashboard = () => {
@@ -8,9 +9,15 @@ const Dashboard = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Get user from local storage (or context if available globally, but local storage is simplest for now)
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     setPageTitle('Dashboard');
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setCurrentUser(JSON.parse(userStr));
+    }
     loadMetrics();
   }, [setPageTitle]);
 
@@ -110,6 +117,22 @@ const Dashboard = () => {
         </Link>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 h-[600px]">
+        {/* Admin Updates Feed */}
+        <PostFeed
+          type="admin"
+          title="Admin Updates"
+          currentUser={currentUser}
+        />
+
+        {/* Staff Updates Feed */}
+        <PostFeed
+          type="staff"
+          title="Staff Updates"
+          currentUser={currentUser}
+        />
+      </div>
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Welcome to WMS</h2>
         <p className="text-gray-600">
@@ -119,5 +142,6 @@ const Dashboard = () => {
     </div>
   );
 };
+
 
 export default Dashboard;
