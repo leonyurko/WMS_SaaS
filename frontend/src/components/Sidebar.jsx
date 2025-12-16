@@ -14,7 +14,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { path: '/inventory-history', icon: 'fa-exchange-alt', label: 'Inventory History', roles: ['Admin', 'Manager'] },
     { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', roles: ['Admin', 'Manager'] },
     { path: '/delivery-notes', icon: 'fa-file-alt', label: 'Delivery Notes', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/signing-forms', icon: 'fa-file-signature', label: 'Signing Forms', roles: ['Admin', 'Manager'] },
+    { path: '/equipment-borrowing', icon: 'fa-handshake', label: 'Equipment Borrowing', roles: ['Admin', 'Manager'] },
     { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', roles: ['Admin'] },
     { path: '/users', icon: 'fa-users', label: 'Users', roles: ['Admin'] },
   ];
@@ -56,8 +56,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               to={item.path}
               onClick={() => setIsOpen(false)}
               className={`block py-2.5 px-6 rounded-r-lg transition duration-200 ${isActive(item.path)
-                  ? 'bg-gray-700'
-                  : 'hover:bg-gray-700'
+                ? 'bg-gray-700'
+                : 'hover:bg-gray-700'
                 }`}
             >
               <i className={`fas ${item.icon} w-6 mr-3`}></i>

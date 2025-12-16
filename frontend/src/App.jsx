@@ -9,8 +9,8 @@ import Suppliers from './pages/Suppliers';
 import EmailFormats from './pages/EmailFormats';
 import WarehouseLayout from './pages/WarehouseLayout';
 import DeliveryNotes from './pages/DeliveryNotes';
-import SigningForms from './pages/SigningForms';
-import PublicSign from './pages/PublicSign';
+import EquipmentBorrowing from './pages/SigningForms';
+import PublicBorrowing from './pages/PublicSign';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuthStore from './stores/authStore';
@@ -40,11 +40,11 @@ function App() {
           <Route path="users" element={<Users />} />
           <Route path="settings/layout" element={<WarehouseLayout />} />
           <Route path="delivery-notes" element={<DeliveryNotes />} />
-          <Route path="signing-forms" element={<SigningForms />} />
+          <Route path="equipment-borrowing" element={<EquipmentBorrowing />} />
         </Route>
 
-        {/* Public route for signing (no auth required) */}
-        <Route path="/sign/:formId" element={<PublicSign />} />
+        {/* Public route for equipment borrowing (no auth required) */}
+        <Route path="/borrow/:regulationId" element={<PublicBorrowing />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

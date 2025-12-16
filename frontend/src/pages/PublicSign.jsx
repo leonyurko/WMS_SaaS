@@ -2,34 +2,42 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
 
-const PublicSign = () => {
-    const { formId } = useParams();
-    const [form, setForm] = useState(null);
+const PublicBorrowing = () => {
+    const { regulationId } = useParams();
+    const [regulation, setRegulation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
     const canvasRef = useRef(null);
+    const idPhotoRef = useRef(null);
+    const equipmentPhotoRef = useRef(null);
 
     const [formData, setFormData] = useState({
-        customerName: '',
-        customerEmail: '',
-        customerPhone: ''
+        firstName: '',
+        lastName: '',
+        companyName: '',
+        phone: '',
+        idNumber: '',
+        equipmentName: ''
     });
+    const [idPhotoFile, setIdPhotoFile] = useState(null);
+    const [idPhotoPreview, setIdPhotoPreview] = useState(null);
+    const [equipmentPhotoFile, setEquipmentPhotoFile] = useState(null);
+    const [equipmentPhotoPreview, setEquipmentPhotoPreview] = useState(null);
 
     useEffect(() => {
-        loadForm();
-    }, [formId]);
+        loadRegulation();
+    }, [regulationId]);
 
-    const loadForm = async () => {
+    const loadRegulation = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/signatures/public/forms/${formId}`);
-            setForm(response.data);
+            const response = await api.get(`/equipment-borrowing/public/regulations/${regulationId}`);
+            setRegulation(response.data);
         } catch (err) {
-            console.error('Failed to load form:', err);
-            setError(err.response?.data?.message || 'Form not found or inactive');
+            setError(err.response?.data?.message || 'Form not found');
         } finally {
             setLoading(false);
         }
@@ -40,15 +48,30 @@ const PublicSign = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Canvas drawing functions
+    const handleFileChange = (e, type) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (type === 'id') {
+                setIdPhotoFile(file);
+                setIdPhotoPreview(reader.result);
+            } else {
+                setEquipmentPhotoFile(file);
+                setEquipmentPhotoPreview(reader.result);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Canvas drawing
     const startDrawing = (e) => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         const rect = canvas.getBoundingClientRect();
-
         const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
         const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
         ctx.beginPath();
         ctx.moveTo(x, y);
         setIsDrawing(true);
@@ -57,14 +80,11 @@ const PublicSign = () => {
     const draw = (e) => {
         if (!isDrawing) return;
         e.preventDefault();
-
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         const rect = canvas.getBoundingClientRect();
-
         const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
         const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
         ctx.lineTo(x, y);
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
@@ -72,9 +92,7 @@ const PublicSign = () => {
         ctx.stroke();
     };
 
-    const stopDrawing = () => {
-        setIsDrawing(false);
-    };
+    const stopDrawing = () => setIsDrawing(false);
 
     const clearCanvas = () => {
         const canvas = canvasRef.current;
@@ -92,8 +110,8 @@ const PublicSign = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.customerName.trim()) {
-            alert('Please enter your name');
+        if (!formData.firstName || !formData.lastName || !formData.phone || !formData.equipmentName) {
+            alert('Please fill all required fields');
             return;
         }
 
@@ -107,15 +125,29 @@ const PublicSign = () => {
             const canvas = canvasRef.current;
             const signatureData = canvas.toDataURL('image/png');
 
-            await api.post(`/signatures/public/forms/${formId}/sign`, {
-                ...formData,
-                signatureData
+            const submitData = new FormData();
+            submitData.append('firstName', formData.firstName);
+            submitData.append('lastName', formData.lastName);
+            submitData.append('companyName', formData.companyName);
+            submitData.append('phone', formData.phone);
+            submitData.append('idNumber', formData.idNumber);
+            submitData.append('equipmentName', formData.equipmentName);
+            submitData.append('signatureData', signatureData);
+
+            if (idPhotoFile) {
+                submitData.append('idPhoto', idPhotoFile);
+            }
+            if (equipmentPhotoFile) {
+                submitData.append('equipmentPhoto', equipmentPhotoFile);
+            }
+
+            await api.post(`/equipment-borrowing/public/regulations/${regulationId}/submit`, submitData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             setSubmitted(true);
         } catch (err) {
-            console.error(err);
-            alert('Failed to submit signature. Please try again.');
+            alert('Failed to submit. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -124,10 +156,7 @@ const PublicSign = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <i className="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-                    <p className="text-gray-600">Loading form...</p>
-                </div>
+                <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
             </div>
         );
     }
@@ -137,7 +166,7 @@ const PublicSign = () => {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
                     <i className="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i>
-                    <h1 className="text-xl font-bold text-gray-900 mb-2">Form Not Available</h1>
+                    <h1 className="text-xl font-bold mb-2">Form Not Available</h1>
                     <p className="text-gray-600">{error}</p>
                 </div>
             </div>
@@ -149,9 +178,9 @@ const PublicSign = () => {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
                     <i className="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
-                    <p className="text-gray-600 mb-4">Your signature has been submitted successfully.</p>
-                    <p className="text-sm text-gray-500">You may close this page now.</p>
+                    <h1 className="text-2xl font-bold mb-2">Thank You!</h1>
+                    <p className="text-gray-600 mb-4">Your borrowing form has been submitted.</p>
+                    <p className="text-sm text-gray-500">You may close this page.</p>
                 </div>
             </div>
         );
@@ -163,76 +192,150 @@ const PublicSign = () => {
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     {/* Header */}
                     <div className="bg-blue-600 text-white p-6">
-                        <h1 className="text-2xl font-bold">{form.name}</h1>
-                        <p className="text-blue-100 mt-1">Please read and sign below</p>
+                        <h1 className="text-2xl font-bold">{regulation.name}</h1>
+                        <p className="text-blue-100 mt-1">Equipment Borrowing Form</p>
                     </div>
 
-                    {/* Regulation Text */}
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Terms & Conditions</h2>
-                        <div
-                            className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap"
-                            dir="rtl"
-                            style={{ textAlign: 'right' }}
-                        >
-                            {form.regulation_text}
-                        </div>
-                    </div>
-
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        {/* Personal Info */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Full Name <span className="text-red-500">*</span>
+                                    First Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    name="customerName"
+                                    name="firstName"
                                     required
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-3"
-                                    value={formData.customerName}
+                                    className="w-full border rounded-md p-3"
+                                    value={formData.firstName}
                                     onChange={handleInputChange}
-                                    placeholder="Enter your full name"
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Last Name <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    type="email"
-                                    name="customerEmail"
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-3"
-                                    value={formData.customerEmail}
+                                    type="text"
+                                    name="lastName"
+                                    required
+                                    className="w-full border rounded-md p-3"
+                                    value={formData.lastName}
                                     onChange={handleInputChange}
-                                    placeholder="your@email.com"
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (Optional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                                <input
+                                    type="text"
+                                    name="companyName"
+                                    className="w-full border rounded-md p-3"
+                                    value={formData.companyName}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Phone <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="tel"
-                                    name="customerPhone"
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-3"
-                                    value={formData.customerPhone}
+                                    name="phone"
+                                    required
+                                    className="w-full border rounded-md p-3"
+                                    value={formData.phone}
                                     onChange={handleInputChange}
-                                    placeholder="050-123-4567"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input
+                                    type="text"
+                                    name="idNumber"
+                                    className="w-full border rounded-md p-3"
+                                    value={formData.idNumber}
+                                    onChange={handleInputChange}
                                 />
                             </div>
                         </div>
 
-                        {/* Signature Canvas */}
+                        {/* ID Photo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">ID Photo (Optional)</label>
+                            <input
+                                ref={idPhotoRef}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={(e) => handleFileChange(e, 'id')}
+                                className="hidden"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => idPhotoRef.current?.click()}
+                                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                            >
+                                <i className="fas fa-camera mr-2"></i> Take/Upload ID Photo
+                            </button>
+                            {idPhotoPreview && (
+                                <img src={idPhotoPreview} alt="ID Preview" className="mt-2 h-24 rounded border" />
+                            )}
+                        </div>
+
+                        {/* Equipment Info */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Equipment Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="equipmentName"
+                                required
+                                className="w-full border rounded-md p-3"
+                                value={formData.equipmentName}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+
+                        {/* Equipment Photo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Equipment Photo (Optional)</label>
+                            <input
+                                ref={equipmentPhotoRef}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={(e) => handleFileChange(e, 'equipment')}
+                                className="hidden"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => equipmentPhotoRef.current?.click()}
+                                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                            >
+                                <i className="fas fa-camera mr-2"></i> Take/Upload Equipment Photo
+                            </button>
+                            {equipmentPhotoPreview && (
+                                <img src={equipmentPhotoPreview} alt="Equipment Preview" className="mt-2 h-24 rounded border" />
+                            )}
+                        </div>
+
+                        {/* Regulations */}
+                        <div>
+                            <h2 className="text-lg font-semibold mb-2">Terms & Conditions</h2>
+                            <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto text-sm whitespace-pre-wrap" dir="rtl">
+                                {regulation.regulation_text}
+                            </div>
+                        </div>
+
+                        {/* Signature */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="text-sm font-medium text-gray-700">
                                     Signature <span className="text-red-500">*</span>
                                 </label>
-                                <button
-                                    type="button"
-                                    onClick={clearCanvas}
-                                    className="text-sm text-gray-500 hover:text-gray-700"
-                                >
+                                <button type="button" onClick={clearCanvas} className="text-sm text-gray-500 hover:text-gray-700">
                                     <i className="fas fa-eraser mr-1"></i> Clear
                                 </button>
                             </div>
@@ -252,30 +355,24 @@ const PublicSign = () => {
                                     onTouchEnd={stopDrawing}
                                 />
                             </div>
-                            <p className="mt-1 text-xs text-gray-500">Draw your signature above using mouse or touch</p>
+                            <p className="mt-1 text-xs text-gray-500">Sign above using mouse or touch</p>
                         </div>
 
                         {/* Submit */}
-                        <div className="pt-4">
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {submitting ? (
-                                    <>
-                                        <i className="fas fa-spinner fa-spin mr-2"></i> Submitting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="fas fa-signature mr-2"></i> Submit Signature
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                        >
+                            {submitting ? (
+                                <><i className="fas fa-spinner fa-spin mr-2"></i> Submitting...</>
+                            ) : (
+                                <><i className="fas fa-check mr-2"></i> Submit Form</>
+                            )}
+                        </button>
 
                         <p className="text-xs text-gray-500 text-center">
-                            By signing, you confirm that you have read and agree to the terms above.
+                            By signing, you agree to the terms above.
                         </p>
                     </form>
                 </div>
@@ -284,4 +381,4 @@ const PublicSign = () => {
     );
 };
 
-export default PublicSign;
+export default PublicBorrowing;
