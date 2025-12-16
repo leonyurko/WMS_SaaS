@@ -232,6 +232,147 @@ const archiveTicket = async (req, res) => {
     }
 };
 
+// ==================== TOKENS (One-time use links) ====================
+
+/**
+ * Create token (generates one-time use link)
+ */
+const createToken = async (req, res) => {
+    try {
+        const { regulationId, customerName, customerPhone, equipmentName, expiresInHours } = req.body;
+        const createdBy = req.user.id;
+
+        if (!regulationId) {
+            return res.status(400).json({ message: 'Regulation ID is required' });
+        }
+
+        const token = await equipmentBorrowingService.createToken({
+            regulationId,
+            customerName,
+            customerPhone,
+            equipmentName,
+            createdBy,
+            expiresInHours
+        });
+
+        res.status(201).json(token);
+    } catch (error) {
+        console.error('Error creating token:', error);
+        res.status(500).json({ message: 'Failed to create token', error: error.message });
+    }
+};
+
+/**
+ * Get all tokens (admin)
+ */
+const getAllTokens = async (req, res) => {
+    try {
+        const { regulationId, status } = req.query;
+        const tokens = await equipmentBorrowingService.getAllTokens({ regulationId, status });
+        res.json(tokens);
+    } catch (error) {
+        console.error('Error getting tokens:', error);
+        res.status(500).json({ message: 'Failed to get tokens', error: error.message });
+    }
+};
+
+/**
+ * Get form data for token (public - for the borrower)
+ */
+const getTokenForm = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const validation = await equipmentBorrowingService.validateToken(token);
+
+        if (!validation.valid) {
+            return res.status(400).json({ message: validation.error });
+        }
+
+        const tokenData = validation.token;
+        res.json({
+            regulationName: tokenData.regulation_name,
+            regulationText: tokenData.regulation_text,
+            customerName: tokenData.customer_name,
+            customerPhone: tokenData.customer_phone,
+            equipmentName: tokenData.equipment_name
+        });
+    } catch (error) {
+        console.error('Error getting token form:', error);
+        res.status(500).json({ message: 'Failed to get form', error: error.message });
+    }
+};
+
+/**
+ * Submit form using token (public - marks token as used)
+ */
+const submitWithToken = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const {
+            firstName, lastName, companyName, phone, idNumber,
+            equipmentName, signatureData
+        } = req.body;
+
+        if (!firstName || !lastName || !phone || !equipmentName || !signatureData) {
+            return res.status(400).json({
+                message: 'First name, last name, phone, equipment name, and signature are required'
+            });
+        }
+
+        // Get uploaded file URLs if any
+        let idPhotoUrl = null;
+        let equipmentPhotoUrl = null;
+
+        if (req.files) {
+            if (req.files.idPhoto && req.files.idPhoto[0]) {
+                idPhotoUrl = `/uploads/equipment-borrowing/${req.files.idPhoto[0].filename}`;
+            }
+            if (req.files.equipmentPhoto && req.files.equipmentPhoto[0]) {
+                equipmentPhotoUrl = `/uploads/equipment-borrowing/${req.files.equipmentPhoto[0].filename}`;
+            }
+        }
+
+        const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+        const ticket = await equipmentBorrowingService.submitTicketWithToken(token, {
+            firstName,
+            lastName,
+            companyName,
+            phone,
+            idNumber,
+            idPhotoUrl,
+            equipmentName,
+            equipmentPhotoUrl,
+            signatureData,
+            ipAddress
+        });
+
+        res.status(201).json({ message: 'Form submitted successfully', ticket });
+    } catch (error) {
+        console.error('Error submitting with token:', error);
+        res.status(400).json({ message: error.message || 'Failed to submit form' });
+    }
+};
+
+/**
+ * Expire token manually (admin)
+ */
+const expireToken = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const token = await equipmentBorrowingService.expireToken(id);
+
+        if (!token) {
+            return res.status(404).json({ message: 'Token not found or already used/expired' });
+        }
+
+        res.json({ message: 'Token expired successfully', token });
+    } catch (error) {
+        console.error('Error expiring token:', error);
+        res.status(500).json({ message: 'Failed to expire token', error: error.message });
+    }
+};
+
 module.exports = {
     getAllRegulations,
     getRegulationForSigning,
@@ -242,5 +383,12 @@ module.exports = {
     getAllTickets,
     getTicketById,
     submitTicket,
-    archiveTicket
+    archiveTicket,
+    // Token functions
+    createToken,
+    getAllTokens,
+    getTokenForm,
+    submitWithToken,
+    expireToken
 };
+

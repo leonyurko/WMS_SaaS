@@ -3,8 +3,9 @@ import { useParams } from 'react-router-dom';
 import api from '../services/api';
 
 const PublicBorrowing = () => {
-    const { regulationId } = useParams();
+    const { regulationId, token } = useParams();
     const [regulation, setRegulation] = useState(null);
+    const [prefillData, setPrefillData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -13,6 +14,9 @@ const PublicBorrowing = () => {
     const canvasRef = useRef(null);
     const idPhotoRef = useRef(null);
     const equipmentPhotoRef = useRef(null);
+
+    // Determine if using token or regulation
+    const isTokenBased = Boolean(token);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -28,16 +32,44 @@ const PublicBorrowing = () => {
     const [equipmentPhotoPreview, setEquipmentPhotoPreview] = useState(null);
 
     useEffect(() => {
-        loadRegulation();
-    }, [regulationId]);
+        loadForm();
+    }, [regulationId, token]);
 
-    const loadRegulation = async () => {
+    const loadForm = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/equipment-borrowing/public/regulations/${regulationId}`);
-            setRegulation(response.data);
+
+            if (isTokenBased) {
+                // Token-based (one-time use link)
+                const response = await api.get(`/equipment-borrowing/public/token/${token}`);
+                setRegulation({
+                    name: response.data.regulationName,
+                    regulation_text: response.data.regulationText
+                });
+                // Pre-fill form data if provided when token was created
+                if (response.data.customerName || response.data.equipmentName) {
+                    const [firstName, ...lastNameParts] = (response.data.customerName || '').split(' ');
+                    setPrefillData({
+                        firstName: firstName || '',
+                        lastName: lastNameParts.join(' ') || '',
+                        phone: response.data.customerPhone || '',
+                        equipmentName: response.data.equipmentName || ''
+                    });
+                    setFormData(prev => ({
+                        ...prev,
+                        firstName: firstName || '',
+                        lastName: lastNameParts.join(' ') || '',
+                        phone: response.data.customerPhone || '',
+                        equipmentName: response.data.equipmentName || ''
+                    }));
+                }
+            } else {
+                // Legacy regulation-based URL
+                const response = await api.get(`/equipment-borrowing/public/regulations/${regulationId}`);
+                setRegulation(response.data);
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Form not found');
+            setError(err.response?.data?.message || 'Form not found or has already been submitted');
         } finally {
             setLoading(false);
         }
@@ -141,7 +173,12 @@ const PublicBorrowing = () => {
                 submitData.append('equipmentPhoto', equipmentPhotoFile);
             }
 
-            await api.post(`/equipment-borrowing/public/regulations/${regulationId}/submit`, submitData, {
+            // Use different endpoint based on URL type
+            const submitUrl = isTokenBased
+                ? `/equipment-borrowing/public/token/${token}/submit`
+                : `/equipment-borrowing/public/regulations/${regulationId}/submit`;
+
+            await api.post(submitUrl, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

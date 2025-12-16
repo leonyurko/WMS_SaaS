@@ -47,11 +47,18 @@ const uploadFields = upload.fields([
 
 // ==================== PUBLIC ROUTES (no authentication) ====================
 
-// Get regulation for signing
+// Get regulation for signing (legacy - keep for backwards compatibility)
 router.get('/public/regulations/:id', equipmentBorrowingController.getRegulationForSigning);
 
-// Submit borrowing ticket
+// Submit borrowing ticket (legacy - keep for backwards compatibility)
 router.post('/public/regulations/:id/submit', uploadFields, equipmentBorrowingController.submitTicket);
+
+// TOKEN-BASED PUBLIC ROUTES (one-time use links)
+// Get form using token
+router.get('/public/token/:token', equipmentBorrowingController.getTokenForm);
+
+// Submit form using token (marks token as used)
+router.post('/public/token/:token/submit', uploadFields, equipmentBorrowingController.submitWithToken);
 
 // ==================== ADMIN ROUTES (authentication required) ====================
 
@@ -67,4 +74,10 @@ router.get('/tickets', authenticateToken, equipmentBorrowingController.getAllTic
 router.get('/tickets/:id', authenticateToken, equipmentBorrowingController.getTicketById);
 router.post('/tickets/:id/archive', authenticateToken, requireRole(['Admin', 'Manager']), equipmentBorrowingController.archiveTicket);
 
+// Tokens management (one-time use links)
+router.get('/tokens', authenticateToken, equipmentBorrowingController.getAllTokens);
+router.post('/tokens', authenticateToken, requireRole(['Admin', 'Manager']), equipmentBorrowingController.createToken);
+router.post('/tokens/:id/expire', authenticateToken, requireRole(['Admin', 'Manager']), equipmentBorrowingController.expireToken);
+
 module.exports = router;
+

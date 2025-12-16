@@ -248,6 +248,184 @@ const archiveTicket = async (ticketId, closedBy) => {
     return result.rows[0];
 };
 
+// ==================== TOKEN FUNCTIONS ====================
+
+const crypto = require('crypto');
+
+/**
+ * Generate unique token
+ */
+const generateToken = () => {
+    return crypto.randomBytes(32).toString('hex');
+};
+
+/**
+ * Create new borrowing token (one-time use link)
+ */
+const createToken = async (data) => {
+    const { regulationId, customerName, customerPhone, equipmentName, createdBy, expiresInHours } = data;
+    const token = generateToken();
+
+    let expiresAt = null;
+    if (expiresInHours) {
+        expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
+    }
+
+    const result = await query(
+        `INSERT INTO borrowing_tokens (regulation_id, token, customer_name, customer_phone, equipment_name, created_by, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [regulationId, token, customerName || null, customerPhone || null, equipmentName || null, createdBy, expiresAt]
+    );
+
+    return result.rows[0];
+};
+
+/**
+ * Get all tokens for admin
+ */
+const getAllTokens = async (filters = {}) => {
+    const { regulationId, status, page = 1, limit = 50 } = filters;
+    const offset = (page - 1) * limit;
+
+    let whereConditions = [];
+    let params = [];
+    let paramCount = 1;
+
+    if (regulationId) {
+        whereConditions.push(`bt.regulation_id = $${paramCount++}`);
+        params.push(regulationId);
+    }
+    if (status) {
+        whereConditions.push(`bt.status = $${paramCount++}`);
+        params.push(status);
+    }
+
+    const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+    params.push(limit, offset);
+    const result = await query(`
+        SELECT 
+            bt.*,
+            br.name as regulation_name,
+            u.username as created_by_username
+        FROM borrowing_tokens bt
+        LEFT JOIN borrowing_regulations br ON bt.regulation_id = br.id
+        LEFT JOIN users u ON bt.created_by = u.id
+        ${whereClause}
+        ORDER BY bt.created_at DESC
+        LIMIT $${paramCount} OFFSET $${paramCount + 1}
+    `, params);
+
+    return result.rows;
+};
+
+/**
+ * Get token by token string (for public access)
+ */
+const getTokenByString = async (tokenString) => {
+    const result = await query(`
+        SELECT 
+            bt.*,
+            br.id as regulation_id,
+            br.name as regulation_name,
+            br.regulation_text,
+            br.is_active as regulation_active
+        FROM borrowing_tokens bt
+        LEFT JOIN borrowing_regulations br ON bt.regulation_id = br.id
+        WHERE bt.token = $1
+    `, [tokenString]);
+    return result.rows[0] || null;
+};
+
+/**
+ * Validate token for submission
+ */
+const validateToken = async (tokenString) => {
+    const token = await getTokenByString(tokenString);
+
+    if (!token) {
+        return { valid: false, error: 'Token not found' };
+    }
+
+    if (token.status === 'used') {
+        return { valid: false, error: 'This form has already been submitted' };
+    }
+
+    if (token.status === 'expired') {
+        return { valid: false, error: 'This link has expired' };
+    }
+
+    if (token.expires_at && new Date(token.expires_at) < new Date()) {
+        // Mark as expired
+        await query(`UPDATE borrowing_tokens SET status = 'expired' WHERE id = $1`, [token.id]);
+        return { valid: false, error: 'This link has expired' };
+    }
+
+    if (!token.regulation_active) {
+        return { valid: false, error: 'This regulation form is no longer active' };
+    }
+
+    return { valid: true, token };
+};
+
+/**
+ * Submit ticket using token (marks token as used)
+ */
+const submitTicketWithToken = async (tokenString, data) => {
+    const validation = await validateToken(tokenString);
+    if (!validation.valid) {
+        throw new Error(validation.error);
+    }
+
+    const token = validation.token;
+    const {
+        firstName, lastName, companyName, phone, idNumber,
+        idPhotoUrl, equipmentName, equipmentPhotoUrl,
+        signatureData, ipAddress
+    } = data;
+
+    const customerName = `${firstName} ${lastName}`.trim();
+
+    // Create ticket
+    const ticketResult = await query(
+        `INSERT INTO equipment_borrowing (
+            form_id, customer_name, first_name, last_name, company_name, phone,
+            id_number, id_photo_url, equipment_name, equipment_photo_url,
+            signature_data, ip_address, status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'open')
+        RETURNING *`,
+        [
+            token.regulation_id, customerName, firstName, lastName, companyName || null, phone,
+            idNumber || null, idPhotoUrl || null, equipmentName, equipmentPhotoUrl || null,
+            signatureData, ipAddress || null
+        ]
+    );
+
+    const ticket = ticketResult.rows[0];
+
+    // Mark token as used
+    await query(`
+        UPDATE borrowing_tokens 
+        SET status = 'used', used_at = CURRENT_TIMESTAMP, ticket_id = $1
+        WHERE id = $2
+    `, [ticket.id, token.id]);
+
+    return ticket;
+};
+
+/**
+ * Expire a token manually
+ */
+const expireToken = async (tokenId) => {
+    const result = await query(`
+        UPDATE borrowing_tokens SET status = 'expired' WHERE id = $1 AND status = 'pending'
+        RETURNING *
+    `, [tokenId]);
+    return result.rows[0];
+};
+
 module.exports = {
     getAllRegulations,
     getRegulationById,
@@ -258,5 +436,13 @@ module.exports = {
     getAllTickets,
     getTicketById,
     submitTicket,
-    archiveTicket
+    archiveTicket,
+    // Token functions
+    createToken,
+    getAllTokens,
+    getTokenByString,
+    validateToken,
+    submitTicketWithToken,
+    expireToken
 };
+

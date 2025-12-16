@@ -43,8 +43,9 @@ function App() {
           <Route path="equipment-borrowing" element={<EquipmentBorrowing />} />
         </Route>
 
-        {/* Public route for equipment borrowing (no auth required) */}
+        {/* Public routes for equipment borrowing (no auth required) */}
         <Route path="/borrow/:regulationId" element={<PublicBorrowing />} />
+        <Route path="/borrow/t/:token" element={<PublicBorrowing />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
