@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 const deliveryNoteController = require('../controllers/deliveryNoteController');
 
 // Ensure upload directory exists
@@ -43,7 +43,7 @@ const upload = multer({
 });
 
 // All routes require authentication
-router.use(authenticate);
+router.use(authenticateToken);
 
 // Get all delivery notes
 router.get('/', deliveryNoteController.getAllDeliveryNotes);
@@ -58,7 +58,7 @@ router.post('/', deliveryNoteController.createDeliveryNote);
 router.put('/:id', deliveryNoteController.updateDeliveryNote);
 
 // Delete delivery note (Admin/Manager only)
-router.delete('/:id', authorize(['Admin', 'Manager']), deliveryNoteController.deleteDeliveryNote);
+router.delete('/:id', requireRole(['Admin', 'Manager']), deliveryNoteController.deleteDeliveryNote);
 
 // Upload media to delivery note
 router.post('/:id/media', upload.single('file'), deliveryNoteController.uploadMedia);

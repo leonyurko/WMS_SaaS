@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 const signatureController = require('../controllers/signatureController');
 
 // PUBLIC ROUTES (no authentication required)
@@ -12,24 +12,24 @@ router.post('/public/forms/:id/sign', signatureController.submitSignature);
 
 // ADMIN ROUTES (authentication required)
 // Get all forms
-router.get('/forms', authenticate, signatureController.getAllForms);
+router.get('/forms', authenticateToken, signatureController.getAllForms);
 
 // Get form by ID (admin view)
-router.get('/forms/:id', authenticate, signatureController.getFormById);
+router.get('/forms/:id', authenticateToken, signatureController.getFormById);
 
 // Create form
-router.post('/forms', authenticate, authorize(['Admin', 'Manager']), signatureController.createForm);
+router.post('/forms', authenticateToken, requireRole(['Admin', 'Manager']), signatureController.createForm);
 
 // Update form
-router.put('/forms/:id', authenticate, authorize(['Admin', 'Manager']), signatureController.updateForm);
+router.put('/forms/:id', authenticateToken, requireRole(['Admin', 'Manager']), signatureController.updateForm);
 
 // Delete form
-router.delete('/forms/:id', authenticate, authorize(['Admin']), signatureController.deleteForm);
+router.delete('/forms/:id', authenticateToken, requireRole(['Admin']), signatureController.deleteForm);
 
 // Get signatures for a form
-router.get('/forms/:id/signatures', authenticate, signatureController.getSignatures);
+router.get('/forms/:id/signatures', authenticateToken, signatureController.getSignatures);
 
 // Get single signature
-router.get('/signatures/:signatureId', authenticate, signatureController.getSignatureById);
+router.get('/signatures/:signatureId', authenticateToken, signatureController.getSignatureById);
 
 module.exports = router;
