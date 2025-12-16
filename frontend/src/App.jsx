@@ -8,6 +8,9 @@ import Transactions from './pages/Transactions';
 import Suppliers from './pages/Suppliers';
 import EmailFormats from './pages/EmailFormats';
 import WarehouseLayout from './pages/WarehouseLayout';
+import DeliveryNotes from './pages/DeliveryNotes';
+import SigningForms from './pages/SigningForms';
+import PublicSign from './pages/PublicSign';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuthStore from './stores/authStore';
@@ -36,7 +39,12 @@ function App() {
           <Route path="email-formats" element={<EmailFormats />} />
           <Route path="users" element={<Users />} />
           <Route path="settings/layout" element={<WarehouseLayout />} />
+          <Route path="delivery-notes" element={<DeliveryNotes />} />
+          <Route path="signing-forms" element={<SigningForms />} />
         </Route>
+
+        {/* Public route for signing (no auth required) */}
+        <Route path="/sign/:formId" element={<PublicSign />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

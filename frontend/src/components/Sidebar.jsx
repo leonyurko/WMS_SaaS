@@ -13,6 +13,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { path: '/scanner', icon: 'fa-qrcode', label: 'Scanner', roles: ['Admin', 'Manager', 'Staff'] },
     { path: '/inventory-history', icon: 'fa-exchange-alt', label: 'Inventory History', roles: ['Admin', 'Manager'] },
     { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', roles: ['Admin', 'Manager'] },
+    { path: '/delivery-notes', icon: 'fa-file-alt', label: 'Delivery Notes', roles: ['Admin', 'Manager', 'Staff'] },
+    { path: '/signing-forms', icon: 'fa-file-signature', label: 'Signing Forms', roles: ['Admin', 'Manager'] },
     { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', roles: ['Admin'] },
     { path: '/users', icon: 'fa-users', label: 'Users', roles: ['Admin'] },
   ];
@@ -23,7 +25,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
           onClick={() => setIsOpen(false)}
         ></div>
@@ -39,25 +41,24 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <i className="fas fa-warehouse"></i>
             <span>WMS</span>
           </Link>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="md:hidden text-gray-400 hover:text-white"
           >
             <i className="fas fa-times"></i>
           </button>
         </div>
-        
+
         <nav className="mt-6">
           {filteredNavItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setIsOpen(false)}
-              className={`block py-2.5 px-6 rounded-r-lg transition duration-200 ${
-                isActive(item.path)
+              className={`block py-2.5 px-6 rounded-r-lg transition duration-200 ${isActive(item.path)
                   ? 'bg-gray-700'
                   : 'hover:bg-gray-700'
-              }`}
+                }`}
             >
               <i className={`fas ${item.icon} w-6 mr-3`}></i>
               {item.label}

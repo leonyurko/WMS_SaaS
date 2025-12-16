@@ -18,6 +18,8 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const emailFormatRoutes = require('./routes/emailFormatRoutes');
 const layoutRoutes = require('./routes/layoutRoutes');
 const postRoutes = require('./routes/postRoutes');
+const deliveryNoteRoutes = require('./routes/deliveryNoteRoutes');
+const signatureRoutes = require('./routes/signatureRoutes');
 
 const path = require('path');
 
@@ -80,6 +82,8 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/email-formats', emailFormatRoutes);
 app.use('/api/layouts', layoutRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/delivery-notes', deliveryNoteRoutes);
+app.use('/api/signatures', signatureRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
