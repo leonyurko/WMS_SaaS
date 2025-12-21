@@ -6,19 +6,22 @@ import api from '../services/api';
 const Header = ({ pageTitle, toggleSidebar }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState({
+    outOfStock: [],
+    lowStock: [],
+    wearCritical: [],
+    wearHigh: []
+  });
   const [notificationCount, setNotificationCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     loadNotifications();
-    // Refresh notifications every 60 seconds
     const interval = setInterval(loadNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -31,74 +34,59 @@ const Header = ({ pageTitle, toggleSidebar }) => {
 
   const loadNotifications = async () => {
     try {
-      const notifs = [];
+      const notifs = {
+        outOfStock: [],
+        lowStock: [],
+        wearCritical: [],
+        wearHigh: []
+      };
+      let count = 0;
 
       // Fetch low stock items
-      const inventoryRes = await api.get('/inventory', { params: { status: 'Low Stock' } });
-      const lowStockItems = inventoryRes.data?.data?.items || [];
-      lowStockItems.forEach(item => {
-        notifs.push({
-          id: `lowstock-${item.id}`,
-          type: 'low_stock',
-          title: 'Low Stock',
-          message: `${item.name} is running low (${item.current_stock} left)`,
-          link: '/inventory?status=Low%20Stock',
-          severity: 'warning',
-          icon: 'fa-exclamation-triangle'
-        });
-      });
+      try {
+        const lowStockRes = await api.get('/inventory', { params: { status: 'Low Stock' } });
+        const lowStockItems = lowStockRes.data?.data?.items || [];
+        notifs.lowStock = lowStockItems.slice(0, 5).map(item => ({
+          id: item.id,
+          name: item.name,
+          stock: item.current_stock,
+          location: item.location
+        }));
+        count += lowStockItems.length;
+      } catch (e) { console.error('Low stock fetch failed:', e); }
 
       // Fetch out of stock items
-      const outOfStockRes = await api.get('/inventory', { params: { status: 'Out of Stock' } });
-      const outOfStockItems = outOfStockRes.data?.data?.items || [];
-      outOfStockItems.forEach(item => {
-        notifs.push({
-          id: `outofstock-${item.id}`,
-          type: 'out_of_stock',
-          title: 'Out of Stock',
-          message: `${item.name} is out of stock!`,
-          link: '/inventory?status=Out%20of%20Stock',
-          severity: 'critical',
-          icon: 'fa-times-circle'
-        });
-      });
+      try {
+        const outRes = await api.get('/inventory', { params: { status: 'Out of Stock' } });
+        const outItems = outRes.data?.data?.items || [];
+        notifs.outOfStock = outItems.slice(0, 5).map(item => ({
+          id: item.id,
+          name: item.name,
+          location: item.location
+        }));
+        count += outItems.length;
+      } catch (e) { console.error('Out of stock fetch failed:', e); }
 
-      // Fetch critical/high wear reports
+      // Fetch wear equipment stats
       try {
         const wearRes = await api.get('/wear-equipment/stats');
-        const wearStats = wearRes.data?.stats;
-        if (wearStats) {
-          const criticalCount = parseInt(wearStats.critical_count) || 0;
-          const highCount = parseInt(wearStats.high_count) || 0;
+        const stats = wearRes.data?.stats;
+        if (stats) {
+          const criticalCount = parseInt(stats.critical_count) || 0;
+          const highCount = parseInt(stats.high_count) || 0;
           if (criticalCount > 0) {
-            notifs.push({
-              id: 'wear-critical',
-              type: 'wear_critical',
-              title: 'Critical Wear Reports',
-              message: `${criticalCount} critical wear report(s) need attention`,
-              link: '/wear-equipment',
-              severity: 'critical',
-              icon: 'fa-tools'
-            });
+            notifs.wearCritical = [{ count: criticalCount }];
+            count += 1;
           }
           if (highCount > 0) {
-            notifs.push({
-              id: 'wear-high',
-              type: 'wear_high',
-              title: 'High Priority Wear',
-              message: `${highCount} high priority wear report(s)`,
-              link: '/wear-equipment',
-              severity: 'warning',
-              icon: 'fa-tools'
-            });
+            notifs.wearHigh = [{ count: highCount }];
+            count += 1;
           }
         }
-      } catch (err) {
-        // Wear equipment API might not exist yet, ignore
-      }
+      } catch (e) { /* Wear API might not exist */ }
 
       setNotifications(notifs);
-      setNotificationCount(notifs.length);
+      setNotificationCount(count);
     } catch (err) {
       console.error('Failed to load notifications:', err);
     }
@@ -109,13 +97,8 @@ const Header = ({ pageTitle, toggleSidebar }) => {
     navigate('/login');
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'text-red-600 bg-red-50';
-      case 'warning': return 'text-amber-600 bg-amber-50';
-      default: return 'text-blue-600 bg-blue-50';
-    }
-  };
+  const hasNotifications = notificationCount > 0;
+  const { outOfStock, lowStock, wearCritical, wearHigh } = notifications;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -150,47 +133,98 @@ const Header = ({ pageTitle, toggleSidebar }) => {
             {/* Dropdown */}
             {showDropdown && (
               <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                <div className="px-4 py-3 border-b border-gray-200">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                   <h3 className="font-semibold text-gray-800">Notifications</h3>
-                  <p className="text-sm text-gray-500">{notificationCount} items need attention</p>
                 </div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
+
+                <div className="max-h-96 overflow-y-auto">
+                  {!hasNotifications ? (
                     <div className="px-4 py-8 text-center text-gray-500">
                       <i className="fas fa-check-circle text-3xl mb-2 text-green-500"></i>
-                      <p>All caught up!</p>
+                      <p>All caught up! No alerts.</p>
                     </div>
                   ) : (
-                    notifications.slice(0, 10).map(notif => (
-                      <Link
-                        key={notif.id}
-                        to={notif.link}
-                        onClick={() => setShowDropdown(false)}
-                        className={`flex items-start px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 ${getSeverityColor(notif.severity)}`}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${notif.severity === 'critical' ? 'bg-red-100' : 'bg-amber-100'
-                          }`}>
-                          <i className={`fas ${notif.icon} text-sm`}></i>
+                    <>
+                      {/* Out of Stock Section */}
+                      {outOfStock.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center">
+                            <i className="fas fa-times-circle text-red-600 mr-2"></i>
+                            <span className="font-semibold text-red-800 text-sm">Out of Stock ({outOfStock.length})</span>
+                          </div>
+                          {outOfStock.map(item => (
+                            <Link
+                              key={item.id}
+                              to={`/inventory?status=Out%20of%20Stock`}
+                              onClick={() => setShowDropdown(false)}
+                              className="flex items-center px-4 py-2 hover:bg-red-50 border-b border-gray-100 text-sm"
+                            >
+                              <span className="flex-1 truncate font-medium text-gray-700">{item.name}</span>
+                              <span className="text-red-600 text-xs ml-2">0 left</span>
+                            </Link>
+                          ))}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{notif.title}</p>
-                          <p className="text-xs text-gray-600 truncate">{notif.message}</p>
+                      )}
+
+                      {/* Low Stock Section */}
+                      {lowStock.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center">
+                            <i className="fas fa-exclamation-triangle text-amber-600 mr-2"></i>
+                            <span className="font-semibold text-amber-800 text-sm">Low Stock ({lowStock.length})</span>
+                          </div>
+                          {lowStock.map(item => (
+                            <Link
+                              key={item.id}
+                              to={`/inventory?status=Low%20Stock`}
+                              onClick={() => setShowDropdown(false)}
+                              className="flex items-center px-4 py-2 hover:bg-amber-50 border-b border-gray-100 text-sm"
+                            >
+                              <span className="flex-1 truncate font-medium text-gray-700">{item.name}</span>
+                              <span className="text-amber-600 text-xs ml-2">{item.stock} left</span>
+                            </Link>
+                          ))}
                         </div>
-                      </Link>
-                    ))
+                      )}
+
+                      {/* Wear Equipment - Critical */}
+                      {wearCritical.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center">
+                            <i className="fas fa-tools text-red-600 mr-2"></i>
+                            <span className="font-semibold text-red-800 text-sm">Critical Wear Reports</span>
+                          </div>
+                          <Link
+                            to="/wear-equipment"
+                            onClick={() => setShowDropdown(false)}
+                            className="flex items-center px-4 py-2 hover:bg-red-50 border-b border-gray-100 text-sm"
+                          >
+                            <span className="flex-1 text-gray-700">{wearCritical[0].count} critical report(s) need immediate attention</span>
+                            <i className="fas fa-arrow-right text-red-400 ml-2"></i>
+                          </Link>
+                        </div>
+                      )}
+
+                      {/* Wear Equipment - High */}
+                      {wearHigh.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 flex items-center">
+                            <i className="fas fa-tools text-orange-600 mr-2"></i>
+                            <span className="font-semibold text-orange-800 text-sm">High Priority Wear</span>
+                          </div>
+                          <Link
+                            to="/wear-equipment"
+                            onClick={() => setShowDropdown(false)}
+                            className="flex items-center px-4 py-2 hover:bg-orange-50 border-b border-gray-100 text-sm"
+                          >
+                            <span className="flex-1 text-gray-700">{wearHigh[0].count} high priority report(s)</span>
+                            <i className="fas fa-arrow-right text-orange-400 ml-2"></i>
+                          </Link>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
-                {notifications.length > 0 && (
-                  <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                    <Link
-                      to="/inventory?status=Low%20Stock"
-                      onClick={() => setShowDropdown(false)}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      View all inventory alerts →
-                    </Link>
-                  </div>
-                )}
               </div>
             )}
           </div>
