@@ -4,23 +4,28 @@ require('dotenv').config();
 
 // Create transporter based on configuration
 let transporter;
+let transporterType = 'none';
 
-if (process.env.AWS_SES_REGION) {
-  // Use AWS SES
-  transporter = nodemailer.createTransport({
-    SES: { ses, aws: require('aws-sdk') }
-  });
-} else if (process.env.SMTP_HOST) {
-  // Use SMTP
+// Check SMTP first (more common for testing with Mailtrap, etc.)
+if (process.env.SMTP_HOST && process.env.SMTP_HOST.trim()) {
+  console.log('📧 Email configured with SMTP:', process.env.SMTP_HOST);
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT || 587,
+    port: parseInt(process.env.SMTP_PORT) || 587,
     secure: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
     }
   });
+  transporterType = 'smtp';
+} else if (process.env.AWS_SES_REGION && process.env.AWS_SES_REGION.trim()) {
+  // Use AWS SES
+  console.log('📧 Email configured with AWS SES');
+  transporter = nodemailer.createTransport({
+    SES: { ses, aws: require('aws-sdk') }
+  });
+  transporterType = 'ses';
 } else {
   // Fallback to console logging for development
   console.warn('⚠️  No email service configured. Emails will be logged to console.');
@@ -48,7 +53,7 @@ const sendEmail = async (to, subject, html) => {
 
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Email send error:', error);
