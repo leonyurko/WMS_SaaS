@@ -25,13 +25,16 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
     paramCount++;
   }
 
-  // Status filter
-  if (status === 'low') {
-    whereConditions.push('i.current_stock <= i.min_threshold AND i.current_stock > 0');
-  } else if (status === 'out') {
-    whereConditions.push('i.current_stock = 0');
-  } else if (status === 'in') {
-    whereConditions.push('i.current_stock > i.min_threshold');
+  // Status filter - accept both short and full format
+  if (status) {
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'low' || statusLower === 'low stock') {
+      whereConditions.push('i.current_stock <= i.min_threshold AND i.current_stock > 0');
+    } else if (statusLower === 'out' || statusLower === 'out of stock') {
+      whereConditions.push('i.current_stock = 0');
+    } else if (statusLower === 'in' || statusLower === 'in stock') {
+      whereConditions.push('i.current_stock > i.min_threshold');
+    }
   }
 
   // Warehouse filter (Location)
