@@ -48,8 +48,9 @@ const WearEquipment = () => {
             // Load inventory and open modal with pre-selected item
             const openWithItem = async () => {
                 try {
-                    const items = await fetchInventory({ search: itemName || '' });
-                    setInventoryItems(items || []);
+                    const data = await fetchInventory({ search: itemName || '' });
+                    const items = data?.items || [];
+                    setInventoryItems(items);
                     setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [] });
                     setShowModal(true);
                     // Clear URL params
@@ -95,9 +96,10 @@ const WearEquipment = () => {
 
     const loadInventory = async (search = '') => {
         try {
-            const items = await fetchInventory({ search });
-            setInventoryItems(items || []);
-            return items || [];
+            const data = await fetchInventory({ search });
+            const items = data?.items || [];
+            setInventoryItems(items);
+            return items;
         } catch (err) {
             console.error('Failed to load inventory:', err);
             return [];
