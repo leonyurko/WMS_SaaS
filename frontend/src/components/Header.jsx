@@ -42,48 +42,62 @@ const Header = ({ pageTitle, toggleSidebar }) => {
       };
       let count = 0;
 
-      // Fetch low stock items
+      // Fetch ALL inventory and filter by actual status on client-side for accuracy
       try {
-        const lowStockRes = await api.get('/inventory', { params: { status: 'Low Stock' } });
-        const lowStockItems = lowStockRes.data?.data?.items || [];
+        const inventoryRes = await api.get('/inventory');
+        const allItems = inventoryRes.data?.data?.items || [];
+
+        // Filter by actual status field to ensure accuracy
+        const outOfStockItems = allItems.filter(item => item.status === 'Out of Stock');
+        const lowStockItems = allItems.filter(item => item.status === 'Low Stock');
+
+        notifs.outOfStock = outOfStockItems.slice(0, 5).map(item => ({
+          id: item.id,
+          name: item.name,
+          stock: item.current_stock,
+          location: item.location
+        }));
+
         notifs.lowStock = lowStockItems.slice(0, 5).map(item => ({
           id: item.id,
           name: item.name,
           stock: item.current_stock,
           location: item.location
         }));
-        count += lowStockItems.length;
-      } catch (e) { console.error('Low stock fetch failed:', e); }
 
-      // Fetch out of stock items
-      try {
-        const outRes = await api.get('/inventory', { params: { status: 'Out of Stock' } });
-        const outItems = outRes.data?.data?.items || [];
-        notifs.outOfStock = outItems.slice(0, 5).map(item => ({
-          id: item.id,
-          name: item.name,
-          location: item.location
-        }));
-        count += outItems.length;
-      } catch (e) { console.error('Out of stock fetch failed:', e); }
+        count += outOfStockItems.length + lowStockItems.length;
+      } catch (e) {
+        console.error('Inventory fetch failed:', e);
+      }
 
-      // Fetch wear equipment stats
+      // Fetch wear equipment reports with critical/high severity
       try {
-        const wearRes = await api.get('/wear-equipment/stats');
-        const stats = wearRes.data?.stats;
-        if (stats) {
-          const criticalCount = parseInt(stats.critical_count) || 0;
-          const highCount = parseInt(stats.high_count) || 0;
-          if (criticalCount > 0) {
-            notifs.wearCritical = [{ count: criticalCount }];
-            count += 1;
-          }
-          if (highCount > 0) {
-            notifs.wearHigh = [{ count: highCount }];
-            count += 1;
-          }
+        const wearRes = await api.get('/wear-equipment', { params: { status: 'open' } });
+        const wearReports = wearRes.data?.reports || [];
+
+        const criticalReports = wearReports.filter(r => r.severity === 'critical');
+        const highReports = wearReports.filter(r => r.severity === 'high');
+
+        if (criticalReports.length > 0) {
+          notifs.wearCritical = criticalReports.slice(0, 3).map(r => ({
+            id: r.id,
+            itemName: r.item_name,
+            description: r.description
+          }));
+          count += criticalReports.length;
         }
-      } catch (e) { /* Wear API might not exist */ }
+
+        if (highReports.length > 0) {
+          notifs.wearHigh = highReports.slice(0, 3).map(r => ({
+            id: r.id,
+            itemName: r.item_name,
+            description: r.description
+          }));
+          count += highReports.length;
+        }
+      } catch (e) {
+        /* Wear API might not exist */
+      }
 
       setNotifications(notifs);
       setNotificationCount(count);
@@ -160,7 +174,7 @@ const Header = ({ pageTitle, toggleSidebar }) => {
                               className="flex items-center px-4 py-2 hover:bg-red-50 border-b border-gray-100 text-sm"
                             >
                               <span className="flex-1 truncate font-medium text-gray-700">{item.name}</span>
-                              <span className="text-red-600 text-xs ml-2">0 left</span>
+                              <span className="text-red-600 text-xs ml-2 bg-red-100 px-2 py-0.5 rounded">0 left</span>
                             </Link>
                           ))}
                         </div>
@@ -181,7 +195,7 @@ const Header = ({ pageTitle, toggleSidebar }) => {
                               className="flex items-center px-4 py-2 hover:bg-amber-50 border-b border-gray-100 text-sm"
                             >
                               <span className="flex-1 truncate font-medium text-gray-700">{item.name}</span>
-                              <span className="text-amber-600 text-xs ml-2">{item.stock} left</span>
+                              <span className="text-amber-600 text-xs ml-2 bg-amber-100 px-2 py-0.5 rounded">{item.stock} left</span>
                             </Link>
                           ))}
                         </div>
@@ -192,34 +206,40 @@ const Header = ({ pageTitle, toggleSidebar }) => {
                         <div>
                           <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center">
                             <i className="fas fa-tools text-red-600 mr-2"></i>
-                            <span className="font-semibold text-red-800 text-sm">Critical Wear Reports</span>
+                            <span className="font-semibold text-red-800 text-sm">Critical Wear ({wearCritical.length})</span>
                           </div>
-                          <Link
-                            to="/wear-equipment"
-                            onClick={() => setShowDropdown(false)}
-                            className="flex items-center px-4 py-2 hover:bg-red-50 border-b border-gray-100 text-sm"
-                          >
-                            <span className="flex-1 text-gray-700">{wearCritical[0].count} critical report(s) need immediate attention</span>
-                            <i className="fas fa-arrow-right text-red-400 ml-2"></i>
-                          </Link>
+                          {wearCritical.map(item => (
+                            <Link
+                              key={item.id}
+                              to="/wear-equipment"
+                              onClick={() => setShowDropdown(false)}
+                              className="flex items-center px-4 py-2 hover:bg-red-50 border-b border-gray-100 text-sm"
+                            >
+                              <span className="flex-1 truncate font-medium text-gray-700">{item.itemName}</span>
+                              <span className="text-red-600 text-xs ml-2 bg-red-100 px-2 py-0.5 rounded">Critical</span>
+                            </Link>
+                          ))}
                         </div>
                       )}
 
-                      {/* Wear Equipment - High */}
+                      {/* Wear Equipment - High Priority */}
                       {wearHigh.length > 0 && (
                         <div>
                           <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 flex items-center">
                             <i className="fas fa-tools text-orange-600 mr-2"></i>
-                            <span className="font-semibold text-orange-800 text-sm">High Priority Wear</span>
+                            <span className="font-semibold text-orange-800 text-sm">High Priority Wear ({wearHigh.length})</span>
                           </div>
-                          <Link
-                            to="/wear-equipment"
-                            onClick={() => setShowDropdown(false)}
-                            className="flex items-center px-4 py-2 hover:bg-orange-50 border-b border-gray-100 text-sm"
-                          >
-                            <span className="flex-1 text-gray-700">{wearHigh[0].count} high priority report(s)</span>
-                            <i className="fas fa-arrow-right text-orange-400 ml-2"></i>
-                          </Link>
+                          {wearHigh.map(item => (
+                            <Link
+                              key={item.id}
+                              to="/wear-equipment"
+                              onClick={() => setShowDropdown(false)}
+                              className="flex items-center px-4 py-2 hover:bg-orange-50 border-b border-gray-100 text-sm"
+                            >
+                              <span className="flex-1 truncate font-medium text-gray-700">{item.itemName}</span>
+                              <span className="text-orange-600 text-xs ml-2 bg-orange-100 px-2 py-0.5 rounded">High</span>
+                            </Link>
+                          ))}
                         </div>
                       )}
                     </>
