@@ -38,16 +38,29 @@ const WearEquipment = () => {
     useEffect(() => {
         setPageTitle('Wear Equipment');
         loadData();
+    }, [setPageTitle]);
 
-        // Check for URL params to auto-open modal with pre-selected item
+    // Handle URL params for pre-selecting item (separate effect to avoid function order issues)
+    useEffect(() => {
         const itemId = searchParams.get('itemId');
         const itemName = searchParams.get('itemName');
         if (itemId) {
-            handleOpenModalWithItem(itemId, itemName);
-            // Clear URL params
-            setSearchParams({});
+            // Load inventory and open modal with pre-selected item
+            const openWithItem = async () => {
+                try {
+                    const items = await fetchInventory({ search: itemName || '' });
+                    setInventoryItems(items || []);
+                    setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [] });
+                    setShowModal(true);
+                    // Clear URL params
+                    setSearchParams({});
+                } catch (err) {
+                    console.error('Failed to open modal with item:', err);
+                }
+            };
+            openWithItem();
         }
-    }, [setPageTitle]);
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         if (activeTab) {
