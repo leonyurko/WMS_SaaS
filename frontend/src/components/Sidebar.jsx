@@ -15,6 +15,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', roles: ['Admin', 'Manager'] },
     { path: '/delivery-notes', icon: 'fa-file-alt', label: 'Delivery Notes', roles: ['Admin', 'Manager', 'Staff'] },
     { path: '/equipment-borrowing', icon: 'fa-handshake', label: 'Equipment Borrowing', roles: ['Admin', 'Manager'] },
+    { path: '/wear-equipment', icon: 'fa-tools', label: 'Wear Equipment', roles: ['Admin', 'Manager', 'Staff'] },
     { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', roles: ['Admin'] },
     { path: '/users', icon: 'fa-users', label: 'Users', roles: ['Admin'] },
   ];

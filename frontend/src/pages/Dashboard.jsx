@@ -115,6 +115,15 @@ const Dashboard = () => {
             bgColor="bg-teal-100"
           />
         </Link>
+        <Link to="/wear-equipment">
+          <KPICard
+            title="Wear Equipment"
+            value="View"
+            icon="fa-tools"
+            iconColor="text-amber-500"
+            bgColor="bg-amber-100"
+          />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 h-[600px]">

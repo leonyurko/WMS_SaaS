@@ -10,6 +10,7 @@ import EmailFormats from './pages/EmailFormats';
 import WarehouseLayout from './pages/WarehouseLayout';
 import DeliveryNotes from './pages/DeliveryNotes';
 import EquipmentBorrowing from './pages/SigningForms';
+import WearEquipment from './pages/WearEquipment';
 import PublicBorrowing from './pages/PublicSign';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -41,6 +42,7 @@ function App() {
           <Route path="settings/layout" element={<WarehouseLayout />} />
           <Route path="delivery-notes" element={<DeliveryNotes />} />
           <Route path="equipment-borrowing" element={<EquipmentBorrowing />} />
+          <Route path="wear-equipment" element={<WearEquipment />} />
         </Route>
 
         {/* Public routes for equipment borrowing (no auth required) */}

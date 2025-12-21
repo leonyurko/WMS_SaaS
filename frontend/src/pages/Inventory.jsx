@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext, useSearchParams } from 'react-router-dom';
+import { useOutletContext, useSearchParams, useNavigate } from 'react-router-dom';
 import { fetchInventory, createInventory, updateInventory, deleteInventory } from '../services/inventoryService';
 import api from '../services/api';
 
 const Inventory = () => {
   const { setPageTitle } = useOutletContext();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -674,6 +675,9 @@ const Inventory = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
+                        <button onClick={() => navigate(`/wear-equipment?itemId=${item.id}&itemName=${encodeURIComponent(item.name)}`)} className="text-amber-600 hover:text-amber-900" title="Report Wear">
+                          <i className="fas fa-tools"></i>
+                        </button>
                         <button onClick={() => printItem(item)} className="text-gray-600 hover:text-gray-900" title="Print">
                           <i className="fas fa-print"></i>
                         </button>
