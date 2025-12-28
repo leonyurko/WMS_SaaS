@@ -590,7 +590,6 @@ const Inventory = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">QR Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -655,11 +654,6 @@ const Inventory = () => {
                         {item.shelf && <div className="text-xs text-gray-500">Shelf: {item.shelf}</div>}
                       </td>
                       <td className="px-6 py-4 font-semibold">{item.current_stock}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(item.status)}`}>
-                          {item.status}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         <button onClick={() => navigate(`/wear-equipment?itemId=${item.id}&itemName=${encodeURIComponent(item.name)}`)} className="text-amber-600 hover:text-amber-900" title="Report Wear">
                           <i className="fas fa-tools"></i>
@@ -1108,9 +1102,6 @@ const InventoryCard = ({ item, getStatusBadge, openGallery, printItem, handleEdi
         <div className="flex-1">
           <div className="flex justify-between items-start mb-1">
             <h4 className="font-semibold text-gray-900">{item.name}</h4>
-            <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusBadge(item.status)}`}>
-              {item.status}
-            </span>
           </div>
           <div className="text-sm text-gray-500">
             {item.location} {item.shelf && `- ${item.shelf}`}
