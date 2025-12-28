@@ -452,7 +452,7 @@ const Inventory = () => {
           .detail-row { padding: 10px; border-bottom: 1px solid #ddd; }
           .detail-label { font-weight: bold; color: #555; font-size: 12px; text-transform: uppercase; }
           .detail-value { font-size: 16px; margin-top: 5px; }
-          .codes { display: flex; justify-content: space-around; align-items: center; margin-top: 30px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; }
+          .codes { display: flex; justify-content: center; align-items: center; margin-top: 30px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; }
           .code-item { text-align: center; }
           .code-item img { max-width: 200px; height: auto; }
           .code-label { font-weight: bold; margin-top: 10px; font-size: 14px; }
@@ -474,14 +474,6 @@ const Inventory = () => {
             <div class="detail-label">Location</div>
             <div class="detail-value">${item.location} ${item.shelf ? `- ${item.shelf}` : ''}</div>
           </div>
-          <div class="detail-row">
-            <div class="detail-label">Current Stock</div>
-            <div class="detail-value">${item.current_stock}</div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-label">Status</div>
-            <div class="detail-value">${item.status}</div>
-          </div>
           <div class="detail-row" style="grid-column: span 2;">
             <div class="detail-label">Description</div>
             <div class="detail-value">${item.description || 'No description'}</div>
@@ -492,12 +484,6 @@ const Inventory = () => {
             <img src="${item.barcode_image_url}" alt="Barcode" />
             <div class="code-label">${item.barcode}</div>
           </div>
-          ${item.qr_image_url ? `
-          <div class="code-item">
-            <img src="${item.qr_image_url}" alt="QR Code" />
-            <div class="code-label">QR Code</div>
-          </div>
-          ` : ''}
         </div>
         <div class="no-print">
           <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Print Page</button>
