@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import api from '../services/api';
 
+// All available pages for permission management
+const ALL_PAGES = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'inventory', label: 'Inventory' },
+  { key: 'scanner', label: 'Scanner' },
+  { key: 'inventory-history', label: 'Inventory History' },
+  { key: 'suppliers', label: 'Suppliers' },
+  { key: 'delivery-notes', label: 'Delivery Notes' },
+  { key: 'equipment-borrowing', label: 'Equipment Borrowing' },
+  { key: 'wear-equipment', label: 'Wear Equipment' },
+  { key: 'email-formats', label: 'Email Formats' },
+  { key: 'users', label: 'Users' }
+];
+
 const Users = () => {
   const { setPageTitle } = useOutletContext();
   const [users, setUsers] = useState([]);
@@ -15,6 +29,12 @@ const Users = () => {
     password: '',
     role: 'Staff'
   });
+
+  // Permissions modal state
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [permissionsUser, setPermissionsUser] = useState(null);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [userPermissions, setUserPermissions] = useState({});
 
   useEffect(() => {
     setPageTitle('User Management');
@@ -84,6 +104,61 @@ const Users = () => {
     }
   };
 
+  // Permissions handlers
+  const handleOpenPermissions = async (user) => {
+    if (user.role === 'Admin') {
+      alert('Admin users have full access by default');
+      return;
+    }
+    setPermissionsUser(user);
+    setPermissionsLoading(true);
+    setShowPermissionsModal(true);
+
+    try {
+      const response = await api.get(`/permissions/${user.id}`);
+      if (response.data.status === 'success') {
+        const accessiblePages = response.data.data.accessiblePages || [];
+        const perms = {};
+        ALL_PAGES.forEach(page => {
+          perms[page.key] = accessiblePages.includes(page.key);
+        });
+        setUserPermissions(perms);
+      }
+    } catch (err) {
+      console.error('Failed to load permissions', err);
+      alert('Failed to load user permissions');
+      setShowPermissionsModal(false);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
+
+  const handlePermissionChange = (pageKey) => {
+    // Dashboard is always required
+    if (pageKey === 'dashboard') return;
+    setUserPermissions(prev => ({
+      ...prev,
+      [pageKey]: !prev[pageKey]
+    }));
+  };
+
+  const handleSavePermissions = async () => {
+    try {
+      const permissions = Object.entries(userPermissions).map(([pageKey, hasAccess]) => ({
+        pageKey,
+        hasAccess
+      }));
+
+      await api.put(`/permissions/${permissionsUser.id}`, { permissions });
+      alert('Permissions saved successfully');
+      setShowPermissionsModal(false);
+      setPermissionsUser(null);
+    } catch (err) {
+      console.error('Failed to save permissions', err);
+      alert('Failed to save permissions');
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -138,6 +213,13 @@ const Users = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleOpenPermissions(user)}
+                        className={`${user.role === 'Admin' ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-900'}`}
+                        title={user.role === 'Admin' ? 'Admin has full access' : 'Manage Permissions'}
+                      >
+                        <i className="fas fa-key"></i>
+                      </button>
                       <button
                         onClick={() => handleEdit(user)}
                         className="text-blue-600 hover:text-blue-900"
@@ -248,6 +330,74 @@ const Users = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Permissions Modal */}
+      {showPermissionsModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Page Permissions - {permissionsUser?.username}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPermissionsModal(false);
+                  setPermissionsUser(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            {permissionsLoading ? (
+              <div className="text-center py-6">Loading permissions...</div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {ALL_PAGES.map((page) => (
+                  <label
+                    key={page.key}
+                    className={`flex items-center p-3 rounded-lg border ${page.key === 'dashboard' ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'
+                      } ${userPermissions[page.key] ? 'border-green-300 bg-green-50' : 'border-gray-200'}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={userPermissions[page.key] || false}
+                      onChange={() => handlePermissionChange(page.key)}
+                      disabled={page.key === 'dashboard'}
+                      className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="ml-3 text-gray-700">{page.label}</span>
+                    {page.key === 'dashboard' && (
+                      <span className="ml-auto text-xs text-gray-500">(Always On)</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPermissionsModal(false);
+                  setPermissionsUser(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePermissions}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Save Permissions
+              </button>
+            </div>
           </div>
         </div>
       )}

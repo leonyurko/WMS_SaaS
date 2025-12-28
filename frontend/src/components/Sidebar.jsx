@@ -8,19 +8,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { path: '/dashboard', icon: 'fa-tachometer-alt', label: 'Dashboard', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/inventory', icon: 'fa-boxes', label: 'Inventory', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/scanner', icon: 'fa-qrcode', label: 'Scanner', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/inventory-history', icon: 'fa-exchange-alt', label: 'Inventory History', roles: ['Admin', 'Manager'] },
-    { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', roles: ['Admin', 'Manager'] },
-    { path: '/delivery-notes', icon: 'fa-file-alt', label: 'Delivery Notes', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/equipment-borrowing', icon: 'fa-handshake', label: 'Equipment Borrowing', roles: ['Admin', 'Manager'] },
-    { path: '/wear-equipment', icon: 'fa-tools', label: 'Wear Equipment', roles: ['Admin', 'Manager', 'Staff'] },
-    { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', roles: ['Admin'] },
-    { path: '/users', icon: 'fa-users', label: 'Users', roles: ['Admin'] },
+    { path: '/dashboard', icon: 'fa-tachometer-alt', label: 'Dashboard', key: 'dashboard' },
+    { path: '/inventory', icon: 'fa-boxes', label: 'Inventory', key: 'inventory' },
+    { path: '/scanner', icon: 'fa-qrcode', label: 'Scanner', key: 'scanner' },
+    { path: '/inventory-history', icon: 'fa-exchange-alt', label: 'Inventory History', key: 'inventory-history' },
+    { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', key: 'suppliers' },
+    { path: '/delivery-notes', icon: 'fa-file-alt', label: 'Delivery Notes', key: 'delivery-notes' },
+    { path: '/equipment-borrowing', icon: 'fa-handshake', label: 'Equipment Borrowing', key: 'equipment-borrowing' },
+    { path: '/wear-equipment', icon: 'fa-tools', label: 'Wear Equipment', key: 'wear-equipment' },
+    { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', key: 'email-formats' },
+    { path: '/users', icon: 'fa-users', label: 'Users', key: 'users' },
   ];
 
-  const filteredNavItems = navItems.filter(item => item.roles.includes(user?.role));
+  // Use accessiblePages from user object if available, otherwise use role-based defaults
+  const accessiblePages = user?.accessiblePages || [];
+  const filteredNavItems = navItems.filter(item => accessiblePages.includes(item.key));
 
   return (
     <>

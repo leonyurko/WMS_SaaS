@@ -21,6 +21,7 @@ const postRoutes = require('./routes/postRoutes');
 const deliveryNoteRoutes = require('./routes/deliveryNoteRoutes');
 const equipmentBorrowingRoutes = require('./routes/equipmentBorrowingRoutes');
 const wearEquipmentRoutes = require('./routes/wearEquipmentRoutes');
+const permissionsRoutes = require('./routes/permissionsRoutes');
 
 const path = require('path');
 
@@ -86,6 +87,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/delivery-notes', deliveryNoteRoutes);
 app.use('/api/equipment-borrowing', equipmentBorrowingRoutes);
 app.use('/api/wear-equipment', wearEquipmentRoutes);
+app.use('/api/permissions', permissionsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

@@ -1,5 +1,6 @@
 const { findByUsername, create, countActiveUsers } = require('../models/userModel');
 const { comparePassword, generateToken } = require('../utils/auth');
+const permissionsModel = require('../models/permissionsModel');
 
 /**
  * Login user
@@ -11,7 +12,7 @@ const login = async (req, res, next) => {
 
     // Find user by username
     const user = await findByUsername(username);
-    
+
     if (!user) {
       return res.status(401).json({
         status: 'error',
@@ -32,7 +33,7 @@ const login = async (req, res, next) => {
     console.log(`User found: ${user.username}, Hash: ${user.password_hash}`);
     const isPasswordValid = await comparePassword(password, user.password_hash);
     console.log(`Password valid: ${isPasswordValid}`);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({
         status: 'error',
@@ -47,6 +48,9 @@ const login = async (req, res, next) => {
       role: user.role
     });
 
+    // Get user's accessible pages
+    const accessiblePages = await permissionsModel.getAccessiblePages(user.id, user.role);
+
     // Return token and user info
     res.json({
       status: 'success',
@@ -56,7 +60,8 @@ const login = async (req, res, next) => {
           id: user.id,
           username: user.username,
           email: user.email,
-          role: user.role
+          role: user.role,
+          accessiblePages
         }
       }
     });
