@@ -81,7 +81,7 @@ const Dashboard = () => {
         </Link>
         <Link to="/inventory-history">
           <KPICard
-            title="Recent Transactions"
+            title="Inventory History"
             value={metrics?.recentTransactions || 0}
             icon="fa-exchange-alt"
             iconColor="text-green-500"

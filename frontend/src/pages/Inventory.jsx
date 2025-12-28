@@ -587,7 +587,6 @@ const Inventory = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barcode</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">QR Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -635,18 +634,6 @@ const Inventory = () => {
                           />
                         ) : (
                           <span className="font-mono text-sm">{item.barcode}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {item.qr_image_url ? (
-                          <img
-                            src={item.qr_image_url}
-                            alt="QR Code"
-                            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500"
-                            onClick={() => window.open(item.qr_image_url, '_blank')}
-                          />
-                        ) : (
-                          <span className="text-gray-400 text-xs">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
