@@ -54,7 +54,7 @@ const Inventory = () => {
     loadInventory();
     loadCategories();
     fetchLayouts();
-  }, [setPageTitle, statusFilter, warehouseFilter, shelfFilter, columnFilter, partNumberFilter]);
+  }, [setPageTitle, search, statusFilter, warehouseFilter, shelfFilter, columnFilter, partNumberFilter]);
 
   // Sync mainColumnBuilder to formData.shelfColumn
   useEffect(() => {
