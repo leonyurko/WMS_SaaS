@@ -1,13 +1,13 @@
 const KPICard = ({ title, value, icon, iconColor, bgColor }) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex items-center">
-        <div className={`p-3 ${bgColor} rounded-full`}>
-          <i className={`fas ${icon} ${iconColor} text-xl`}></i>
+    <div className="bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full border border-gray-100">
+      <div className="flex items-center gap-3">
+        <div className={`p-2 ${bgColor} rounded-lg flex-shrink-0`}>
+          <i className={`fas ${icon} ${iconColor} text-lg`}></i>
         </div>
-        <div className="ml-4">
-          <p className="text-gray-500 text-sm">{title}</p>
-          <p className="text-2xl font-bold text-gray-800">{value}</p>
+        <div className="min-w-0">
+          <p className="text-gray-500 text-xs font-medium truncate" title={title}>{title}</p>
+          <p className="text-lg font-bold text-gray-900 leading-tight">{value}</p>
         </div>
       </div>
     </div>
