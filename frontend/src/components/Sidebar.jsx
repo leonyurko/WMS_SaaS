@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
-import logo from '../assets/Serverfarm-logo-secondary-white.png';
+import logo from '../assets/Serverfarm-logo-primary-white.png';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
