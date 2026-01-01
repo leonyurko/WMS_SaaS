@@ -138,7 +138,7 @@ const Header = ({ pageTitle, toggleSidebar }) => {
             >
               <i className="fas fa-bell text-gray-600"></i>
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full">
+                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs font-bold text-white bg-brand-red rounded-full ring-2 ring-white">
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </span>
               )}
@@ -250,7 +250,7 @@ const Header = ({ pageTitle, toggleSidebar }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-brand-red to-red-400 flex items-center justify-center text-white font-semibold shadow-md">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
             <div className="hidden md:flex flex-col">
