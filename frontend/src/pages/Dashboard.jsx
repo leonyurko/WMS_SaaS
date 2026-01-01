@@ -147,12 +147,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Welcome to WMS</h2>
-        <p className="text-gray-600">
-          Use the navigation menu to manage your warehouse inventory, scan barcodes, view transactions, and more.
-        </p>
-      </div>
+
     </div>
   );
 };
