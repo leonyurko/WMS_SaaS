@@ -700,7 +700,7 @@ const Inventory = () => {
                       type="text"
                       name="name"
                       required
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                       value={formData.name}
                       onChange={handleInputChange}
                     />
@@ -712,7 +712,7 @@ const Inventory = () => {
                   <textarea
                     name="description"
                     rows="2"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                     value={formData.description}
                     onChange={handleInputChange}
                   ></textarea>
@@ -723,7 +723,7 @@ const Inventory = () => {
                     <label className="block text-sm font-medium text-gray-700">Category</label>
                     <select
                       name="categoryId"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                       value={formData.categoryId}
                       onChange={handleInputChange}
                     >
@@ -756,7 +756,7 @@ const Inventory = () => {
                     <select
                       name="location"
                       required
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                       value={formData.location}
                       onChange={(e) => {
                         handleInputChange(e);
@@ -773,7 +773,7 @@ const Inventory = () => {
                     <input
                       type="text"
                       name="shelf"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                       value={formData.shelf}
                       onChange={handleInputChange}
                       placeholder="e.g. A1"
@@ -786,7 +786,7 @@ const Inventory = () => {
                       <div key={col.id} className="flex items-center gap-2 mt-1">
                         {index > 0 && (
                           <select
-                            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm w-20"
+                            className="rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm w-20"
                             value={col.relation}
                             onChange={(e) => updateMainColumnBuilder(index, 'relation', e.target.value)}
                           >
@@ -796,7 +796,7 @@ const Inventory = () => {
                         )}
                         <input
                           type="text"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                           value={col.value}
                           onChange={(e) => updateMainColumnBuilder(index, 'value', e.target.value)}
                           placeholder={index === 0 ? "e.g. 1" : "e.g. 5"}
@@ -816,7 +816,7 @@ const Inventory = () => {
                     <button
                       type="button"
                       onClick={addMainColumn}
-                      className="mt-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      className="mt-1 text-sm text-brand-red hover:text-red-800 disabled:opacity-50"
                       disabled={!formData.shelf}
                     >
                       + Add Col
@@ -829,7 +829,7 @@ const Inventory = () => {
                   <input
                     type="text"
                     name="locationDetails"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                     value={formData.locationDetails}
                     onChange={handleInputChange}
                     placeholder="e.g. Near the entrance, Top shelf"
@@ -843,7 +843,7 @@ const Inventory = () => {
                     <button
                       type="button"
                       onClick={addLocation}
-                      className="text-sm text-blue-600 hover:text-blue-800"
+                      className="text-sm text-brand-red hover:text-red-800"
                     >
                       + Add Location
                     </button>
@@ -854,7 +854,7 @@ const Inventory = () => {
                         <div>
                           <label className="block text-xs font-medium text-gray-500">Warehouse</label>
                           <select
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm"
                             value={loc.warehouse}
                             onChange={(e) => handleLocationChange(index, 'warehouse', e.target.value)}
                           >
@@ -867,7 +867,7 @@ const Inventory = () => {
                           <label className="block text-xs font-medium text-gray-500">Row (Shelf)</label>
                           <input
                             type="text"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm"
                             value={loc.shelf}
                             onChange={(e) => handleLocationChange(index, 'shelf', e.target.value)}
                             placeholder="e.g. A1"
@@ -880,7 +880,7 @@ const Inventory = () => {
                             <div key={col.id} className="flex items-center gap-2 mt-1">
                               {colIndex > 0 && (
                                 <select
-                                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm w-20"
+                                  className="rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm w-20"
                                   value={col.relation}
                                   onChange={(e) => updateAddLocationColumnBuilder(index, colIndex, 'relation', e.target.value)}
                                 >
@@ -890,7 +890,7 @@ const Inventory = () => {
                               )}
                               <input
                                 type="text"
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm"
                                 value={col.value}
                                 onChange={(e) => updateAddLocationColumnBuilder(index, colIndex, 'value', e.target.value)}
                                 placeholder={colIndex === 0 ? "e.g. 1" : "e.g. 5"}
@@ -910,7 +910,7 @@ const Inventory = () => {
                           <button
                             type="button"
                             onClick={() => addAddLocationColumn(index)}
-                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                            className="mt-1 text-xs text-brand-red hover:text-red-800 disabled:opacity-50"
                             disabled={!loc.shelf}
                           >
                             + Add Col
@@ -941,7 +941,7 @@ const Inventory = () => {
                       min="0"
                       required
                       disabled={isEditing}
-                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 ${isEditing ? 'bg-gray-100' : ''}`}
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 ${isEditing ? 'bg-gray-100' : ''}`}
                       value={formData.quantity}
                       onChange={handleInputChange}
                     />
@@ -952,7 +952,7 @@ const Inventory = () => {
                       type="number"
                       name="minQuantity"
                       min="0"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                       value={formData.minQuantity}
                       onChange={handleInputChange}
                     />
@@ -983,7 +983,7 @@ const Inventory = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
                   >
                     {isEditing ? 'Update Item' : 'Add Item'}
                   </button>
@@ -1114,7 +1114,7 @@ const InventoryCard = ({ item, getStatusBadge, openGallery, printItem, handleEdi
                   className="h-32 w-32 object-cover rounded-lg shadow-sm"
                 />
                 {hasMultipleImages && (
-                  <span className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                  <span className="absolute bottom-2 right-2 bg-brand-red text-white text-xs rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
                     +{images.length - 1}
                   </span>
                 )}
@@ -1164,7 +1164,7 @@ const InventoryCard = ({ item, getStatusBadge, openGallery, printItem, handleEdi
             <button onClick={() => printItem(item)} className="p-2 text-gray-600 hover:text-gray-900 bg-white rounded border border-gray-300 shadow-sm" title="Print">
               <i className="fas fa-print"></i>
             </button>
-            <button onClick={() => handleEdit(item)} className="p-2 text-blue-600 hover:text-blue-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
+            <button onClick={() => handleEdit(item)} className="p-2 text-brand-red hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
               <i className="fas fa-edit"></i>
             </button>
             <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">

@@ -193,7 +193,7 @@ const PublicBorrowing = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+                <i className="fas fa-spinner fa-spin text-4xl text-brand-red"></i>
             </div>
         );
     }
@@ -228,9 +228,9 @@ const PublicBorrowing = () => {
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     {/* Header */}
-                    <div className="bg-blue-600 text-white p-6">
+                    <div className="bg-brand-red text-white p-6">
                         <h1 className="text-2xl font-bold">{regulation.name}</h1>
-                        <p className="text-blue-100 mt-1">Equipment Borrowing Form</p>
+                        <p className="text-red-100 mt-1">Equipment Borrowing Form</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -399,7 +399,7 @@ const PublicBorrowing = () => {
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                            className="w-full py-3 bg-brand-red text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400"
                         >
                             {submitting ? (
                                 <><i className="fas fa-spinner fa-spin mr-2"></i> Submitting...</>

@@ -30,7 +30,7 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
                         {canEdit && !isEditing && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="text-blue-500 hover:text-blue-700 text-sm"
+                                className="text-brand-red hover:text-red-700 text-sm"
                             >
                                 <i className="fas fa-edit"></i>
                             </button>
@@ -52,7 +52,7 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
                     <textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-brand-red min-h-[100px]"
                         style={{ direction: post.direction || 'ltr' }}
                         dir={post.direction || 'ltr'}
                     />
@@ -65,7 +65,7 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                            className="px-3 py-1 text-sm bg-brand-red text-white rounded hover:bg-red-700"
                         >
                             Save
                         </button>

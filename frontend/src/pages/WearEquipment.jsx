@@ -271,7 +271,7 @@ const WearEquipment = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow'
+                                ? 'bg-white text-brand-red shadow'
                                 : 'text-gray-600 hover:text-gray-800'
                                 }`}
                         >
@@ -282,7 +282,7 @@ const WearEquipment = () => {
                 </div>
                 <button
                     onClick={handleOpenModal}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="bg-brand-red text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                     <i className="fas fa-plus mr-2"></i>
                     Report Wear
@@ -344,7 +344,7 @@ const WearEquipment = () => {
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={() => handleViewReport(report)}
-                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                        className="p-2 text-brand-red hover:bg-red-50 rounded"
                                         title="View Details"
                                     >
                                         <i className="fas fa-eye"></i>
@@ -398,12 +398,12 @@ const WearEquipment = () => {
                                         setInventorySearch(e.target.value);
                                         await loadInventory(e.target.value);
                                     }}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-2"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red mb-2"
                                 />
                                 <select
                                     value={formData.inventoryId}
                                     onChange={(e) => setFormData(prev => ({ ...prev, inventoryId: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
                                     required
                                 >
                                     <option value="">-- Select Item --</option>
@@ -423,7 +423,7 @@ const WearEquipment = () => {
                                 <select
                                     value={formData.severity}
                                     onChange={(e) => setFormData(prev => ({ ...prev, severity: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
                                     required
                                 >
                                     <option value="low">Low</option>
@@ -441,7 +441,7 @@ const WearEquipment = () => {
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
                                     rows={3}
                                     placeholder="Describe the wear or damage..."
                                 />
@@ -477,7 +477,7 @@ const WearEquipment = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700"
                                 >
                                     Create Report
                                 </button>
@@ -586,7 +586,7 @@ const WearEquipment = () => {
                                 {/* Upload more */}
                                 {selectedReport.status === 'open' && (
                                     <div className="mt-3">
-                                        <label className="cursor-pointer text-blue-600 hover:text-blue-700 text-sm">
+                                        <label className="cursor-pointer text-brand-red hover:text-red-700 text-sm">
                                             <i className="fas fa-plus mr-1"></i> Add Photo
                                             <input
                                                 type="file"

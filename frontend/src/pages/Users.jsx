@@ -165,7 +165,7 @@ const Users = () => {
         <h2 className="text-xl font-semibold text-gray-800">System Users</h2>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+          className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700 flex items-center"
         >
           <i className="fas fa-user-plus mr-2"></i> Add User
         </button>
@@ -215,14 +215,14 @@ const Users = () => {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
                         onClick={() => handleOpenPermissions(user)}
-                        className={`${user.role === 'Admin' ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-900'}`}
+                        className={`${user.role === 'Admin' ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'}`}
                         title={user.role === 'Admin' ? 'Admin has full access' : 'Manage Permissions'}
                       >
                         <i className="fas fa-key"></i>
                       </button>
                       <button
                         onClick={() => handleEdit(user)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-brand-red hover:text-red-900"
                         title="Edit User"
                       >
                         <i className="fas fa-edit"></i>
@@ -272,7 +272,7 @@ const Users = () => {
                 <input
                   type="text"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 />
@@ -283,7 +283,7 @@ const Users = () => {
                 <input
                   type="email"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
@@ -294,7 +294,7 @@ const Users = () => {
                 <input
                   type="password"
                   required={!editingUser}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder={editingUser ? "Leave blank to keep current password" : ""}
@@ -304,7 +304,7 @@ const Users = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Role</label>
                 <select
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
@@ -324,7 +324,7 @@ const Users = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
                 >
                   {editingUser ? 'Save Changes' : 'Create User'}
                 </button>
@@ -368,7 +368,7 @@ const Users = () => {
                       checked={userPermissions[page.key] || false}
                       onChange={() => handlePermissionChange(page.key)}
                       disabled={page.key === 'dashboard'}
-                      className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="h-4 w-4 text-brand-red rounded focus:ring-brand-red"
                     />
                     <span className="ml-3 text-gray-700">{page.label}</span>
                     {page.key === 'dashboard' && (
@@ -393,7 +393,7 @@ const Users = () => {
               <button
                 type="button"
                 onClick={handleSavePermissions}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
               >
                 Save Permissions
               </button>
@@ -442,7 +442,7 @@ const UserCard = ({ user, onEdit, onDelete }) => {
           <div className="flex justify-end space-x-3 pt-2">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(user); }}
-              className="text-blue-600 hover:text-blue-900 flex items-center"
+              className="text-brand-red hover:text-red-900 flex items-center"
             >
               <i className="fas fa-edit mr-1"></i> Edit
             </button>

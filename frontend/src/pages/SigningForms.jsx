@@ -149,8 +149,8 @@ const EquipmentBorrowing = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'bg-white text-brand-red shadow'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <i className={`fas ${tab.icon} mr-2`}></i>
@@ -164,7 +164,7 @@ const EquipmentBorrowing = () => {
                 <div className="mb-4">
                     <button
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700"
                     >
                         <i className="fas fa-plus mr-2"></i> Create Regulation
                     </button>
@@ -195,7 +195,7 @@ const EquipmentBorrowing = () => {
                                     <button onClick={() => copyLink(reg.id)} className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
                                         <i className="fas fa-link mr-1"></i> Copy Link
                                     </button>
-                                    <button onClick={() => handleEdit(reg)} className="p-2 text-blue-600 border rounded">
+                                    <button onClick={() => handleEdit(reg)} className="p-2 text-brand-red border rounded">
                                         <i className="fas fa-edit"></i>
                                     </button>
                                     {user?.role === 'Admin' && (
@@ -239,14 +239,14 @@ const EquipmentBorrowing = () => {
                                     <td className="px-4 py-3 text-sm">{formatDate(ticket.signed_at)}</td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 text-xs rounded-full ${ticket.status === 'open'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-gray-100 text-gray-600'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-gray-100 text-gray-600'
                                             }`}>
                                             {ticket.status}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-right space-x-2">
-                                        <button onClick={() => viewTicket(ticket)} className="text-blue-600 hover:text-blue-900">
+                                        <button onClick={() => viewTicket(ticket)} className="text-brand-red hover:text-red-800">
                                             <i className="fas fa-eye"></i>
                                         </button>
                                         {ticket.status === 'open' && (
@@ -318,7 +318,7 @@ const EquipmentBorrowing = () => {
                                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded-md">
                                     Cancel
                                 </button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">
+                                <button type="submit" className="px-4 py-2 bg-brand-red text-white rounded-md">
                                     {isEditing ? 'Update' : 'Create'}
                                 </button>
                             </div>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import logo from '../assets/Serverfarm-logo-secondary-white.png';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -41,17 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       `}>
         <div className="p-6 flex justify-between items-center border-b border-gray-800 h-20">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-lg shadow-red-900/50">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                </path>
-              </svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg tracking-wide leading-none text-white">SERVERFARM</span>
-              <span className="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1">Management</span>
-            </div>
+            <img src={logo} alt="Serverfarm Logo" className="h-10 w-auto object-contain" />
           </Link>
           <button
             onClick={() => setIsOpen(false)}

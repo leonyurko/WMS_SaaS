@@ -73,7 +73,7 @@ const PostFeed = ({ type, title, currentUser }) => {
                 {canPost && (
                     <button
                         onClick={() => setShowModal(true)}
-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center"
+                        className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700 flex items-center"
                     >
                         <i className="fas fa-plus mr-1"></i> Add Update
                     </button>
@@ -122,7 +122,7 @@ const PostFeed = ({ type, title, currentUser }) => {
                                             type="radio"
                                             checked={direction === 'rtl'}
                                             onChange={() => setDirection('rtl')}
-                                            className="text-blue-600 focus:ring-blue-500"
+                                            className="text-brand-red focus:ring-brand-red"
                                         />
                                         <span className="text-sm text-gray-700">RTL (Hebrew)</span>
                                     </label>
@@ -131,7 +131,7 @@ const PostFeed = ({ type, title, currentUser }) => {
                                             type="radio"
                                             checked={direction === 'ltr'}
                                             onChange={() => setDirection('ltr')}
-                                            className="text-blue-600 focus:ring-blue-500"
+                                            className="text-brand-red focus:ring-brand-red"
                                         />
                                         <span className="text-sm text-gray-700">LTR (English)</span>
                                     </label>
@@ -140,7 +140,7 @@ const PostFeed = ({ type, title, currentUser }) => {
                                     value={newPostContent}
                                     onChange={(e) => setNewPostContent(e.target.value)}
                                     placeholder={`Write an update for ${title}...`}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-brand-red min-h-[120px]"
                                     style={{ direction: direction }}
                                     dir={direction}
                                 />
@@ -155,7 +155,7 @@ const PostFeed = ({ type, title, currentUser }) => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+                                    className="px-4 py-1.5 bg-brand-red text-white text-sm font-medium rounded hover:bg-red-700"
                                     disabled={!newPostContent.trim()}
                                 >
                                     Post

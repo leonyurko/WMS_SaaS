@@ -9,7 +9,7 @@ const EmailFormats = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -98,7 +98,7 @@ const EmailFormats = () => {
       const text = formData.body;
       const newText = text.substring(0, start) + variable + text.substring(end);
       setFormData(prev => ({ ...prev, body: newText }));
-      
+
       // Set cursor position after inserted variable
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + variable.length;
@@ -142,7 +142,7 @@ const EmailFormats = () => {
         <h2 className="text-2xl font-semibold text-gray-800">Email Templates</h2>
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+          className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700 flex items-center"
         >
           <i className="fas fa-plus mr-2"></i> Add Format
         </button>
@@ -160,14 +160,14 @@ const EmailFormats = () => {
                   <span className="text-xs text-gray-500">Created by {format.created_by_user || 'Unknown'}</span>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
+                  <button
                     onClick={() => handleEdit(format)}
-                    className="text-blue-600 hover:text-blue-900"
+                    className="text-brand-red hover:text-red-900"
                     title="Edit"
                   >
                     <i className="fas fa-edit"></i>
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(format.id)}
                     className="text-red-600 hover:text-red-900"
                     title="Delete"
@@ -180,11 +180,11 @@ const EmailFormats = () => {
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase">Subject:</label>
-                  <p className="text-sm font-medium text-gray-700" dir="rtl" style={{textAlign: 'right'}}>{format.subject}</p>
+                  <p className="text-sm font-medium text-gray-700" dir="rtl" style={{ textAlign: 'right' }}>{format.subject}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase">Body Preview:</label>
-                  <div className="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap border" dir="rtl" style={{textAlign: 'right'}}>
+                  <div className="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap border" dir="rtl" style={{ textAlign: 'right' }}>
                     {format.body.substring(0, 200)}{format.body.length > 200 ? '...' : ''}
                   </div>
                 </div>
@@ -213,7 +213,7 @@ const EmailFormats = () => {
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Format Name *</label>
@@ -222,7 +222,7 @@ const EmailFormats = () => {
                   name="name"
                   required
                   placeholder="e.g., Standard Order Request"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.name}
                   onChange={handleInputChange}
                 />
@@ -236,7 +236,7 @@ const EmailFormats = () => {
                   required
                   dir="rtl"
                   placeholder="בקשת הזמנה מ-{companyName}"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-right"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-right"
                   value={formData.subject}
                   onChange={handleInputChange}
                 />
@@ -266,7 +266,7 @@ const EmailFormats = () => {
                   rows="12"
                   dir="rtl"
                   placeholder={`שלום,\n\nאני {userName} מ-{companyName}. ברצוננו להזמין {quantity} יחידות של {itemName}.\n\n{notes}\n\nבברכה`}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-sm text-right"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm text-right"
                   value={formData.body}
                   onChange={handleInputChange}
                 ></textarea>
@@ -282,7 +282,7 @@ const EmailFormats = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
                 >
                   {isEditing ? 'Update Format' : 'Create Format'}
                 </button>

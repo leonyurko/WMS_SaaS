@@ -195,7 +195,7 @@ const DeliveryNotes = () => {
                     <input
                         type="text"
                         placeholder="Search delivery notes..."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && loadDeliveryNotes()}
@@ -204,7 +204,7 @@ const DeliveryNotes = () => {
                 <div className="ml-4">
                     <button
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                        className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700 flex items-center"
                     >
                         <i className="fas fa-plus mr-2"></i> Add Delivery Note
                     </button>
@@ -237,7 +237,7 @@ const DeliveryNotes = () => {
                                         <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">{note.notes || '-'}</td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
                                             {(note.media_urls?.length || 0) > 0 && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                     <i className="fas fa-paperclip mr-1"></i> {note.media_urls.length}
                                                 </span>
                                             )}
@@ -252,7 +252,7 @@ const DeliveryNotes = () => {
                                             </button>
                                             <button
                                                 onClick={() => handleEdit(note)}
-                                                className="text-blue-600 hover:text-blue-900"
+                                                className="text-brand-red hover:text-red-900"
                                                 title="Edit"
                                             >
                                                 <i className="fas fa-edit"></i>
@@ -285,7 +285,7 @@ const DeliveryNotes = () => {
                                     </div>
                                     <div className="flex space-x-2">
                                         <button onClick={() => handleView(note)} className="text-green-600"><i className="fas fa-eye"></i></button>
-                                        <button onClick={() => handleEdit(note)} className="text-blue-600"><i className="fas fa-edit"></i></button>
+                                        <button onClick={() => handleEdit(note)} className="text-brand-red"><i className="fas fa-edit"></i></button>
                                         <button onClick={() => handleDelete(note.id)} className="text-red-600"><i className="fas fa-trash"></i></button>
                                     </div>
                                 </div>
@@ -324,7 +324,7 @@ const DeliveryNotes = () => {
                                 <label className="block text-sm font-medium text-gray-700">Supplier (Optional)</label>
                                 <select
                                     name="supplierId"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                                     value={formData.supplierId}
                                     onChange={handleInputChange}
                                 >
@@ -341,7 +341,7 @@ const DeliveryNotes = () => {
                                     type="date"
                                     name="deliveryDate"
                                     required
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                                     value={formData.deliveryDate}
                                     onChange={handleInputChange}
                                 />
@@ -352,7 +352,7 @@ const DeliveryNotes = () => {
                                 <textarea
                                     name="notes"
                                     rows="3"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                                     value={formData.notes}
                                     onChange={handleInputChange}
                                     placeholder="Enter any notes about this delivery..."
@@ -441,7 +441,7 @@ const DeliveryNotes = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                    className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
                                 >
                                     {isEditing ? 'Update' : 'Save'}
                                 </button>
