@@ -249,7 +249,7 @@ const Suppliers = () => {
         <div className="ml-4">
           <button
             onClick={() => { resetForm(); setShowModal(true); }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+            className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700 flex items-center"
           >
             <i className="fas fa-plus mr-2"></i> Add Supplier
           </button>
@@ -285,7 +285,7 @@ const Suppliers = () => {
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openOrderModal(supplier)}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                        className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700"
                       >
                         Place an Order
                       </button>
@@ -293,7 +293,7 @@ const Suppliers = () => {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
                         onClick={() => handleEdit(supplier)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-brand-red hover:text-red-900"
                         title="Edit"
                       >
                         <i className="fas fa-edit"></i>
@@ -424,7 +424,7 @@ const Suppliers = () => {
                   type="email"
                   name="email"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
                   value={formData.email}
                   onChange={handleInputChange}
                 />
@@ -454,7 +454,7 @@ const Suppliers = () => {
                 <button
                   type="button"
                   onClick={addEmail}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="text-sm text-brand-red hover:text-red-800"
                 >
                   + Add Email
                 </button>
@@ -492,198 +492,196 @@ const Suppliers = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
                 >
                   {isEditing ? 'Update Supplier' : 'Add Supplier'}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div >
       )}
 
       {/* Order Modal */}
-      {showOrderModal && currentSupplier && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Place Order - {currentSupplier.name}
-              </h3>
-              <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-gray-600">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            {!emailPreview ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Select Item</label>
-                  <select
-                    name="itemId"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                    value={orderData.itemId}
-                    onChange={handleOrderChange}
-                  >
-                    <option value="">-- Select Item --</option>
-                    {inventory.map(item => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    min="1"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                    value={orderData.quantity}
-                    onChange={handleOrderChange}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email Format *</label>
-                  <select
-                    name="formatId"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                    value={orderData.formatId}
-                    onChange={handleOrderChange}
-                  >
-                    <option value="">-- Select Format --</option>
-                    {emailFormats.map(format => (
-                      <option key={format.id} value={format.id}>{format.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
-                  <textarea
-                    name="notes"
-                    rows="3"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                    value={orderData.notes}
-                    onChange={handleOrderChange}
-                  ></textarea>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowOrderModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handlePreviewOrder}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Preview Email
-                  </button>
-                </div>
+      {
+        showOrderModal && currentSupplier && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Place Order - {currentSupplier.name}
+                </h3>
+                <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <i className="fas fa-times"></i>
+                </button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-semibold text-gray-700 mb-2">Email Preview</h4>
-                  <div className="mb-4">
-                    <label className="block text-xs font-medium text-gray-500 uppercase">To:</label>
-                    <p className="text-sm">{currentSupplier.email}</p>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-xs font-medium text-gray-500 uppercase">Subject:</label>
-                    <p className="text-sm font-medium" dir="rtl" style={{ textAlign: 'right' }}>{emailPreview.subject}</p>
-                  </div>
+
+              {!emailPreview ? (
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Body:</label>
-                    <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap" dir="rtl" style={{ textAlign: 'right' }}>
-                      {emailPreview.body}
+                    <label className="block text-sm font-medium text-gray-700">Select Item</label>
+                    <select
+                      name="itemId"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={orderData.itemId}
+                      onChange={handleOrderChange}
+                    >
+                      <option value="">-- Select Item --</option>
+                      {inventory.map(item => (
+                        <option key={item.id} value={item.id}>{item.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      min="1"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={orderData.quantity}
+                      onChange={handleOrderChange}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email Format *</label>
+                    <select
+                      name="formatId"
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={orderData.formatId}
+                      onChange={handleOrderChange}
+                    >
+                      <option value="">-- Select Format --</option>
+                      {emailFormats.map(format => (
+                        <option key={format.id} value={format.id}>{format.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
+                    <textarea
+                      name="notes"
+                      rows="3"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                      value={orderData.notes}
+                      onChange={handleOrderChange}
+                    ></textarea>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowOrderModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handlePreviewOrder}
+                      className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
+                    >
+                      Preview Email
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold text-gray-700 mb-2">Email Preview</h4>
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-500 uppercase">To:</label>
+                      <p className="text-sm">{currentSupplier.email}</p>
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-500 uppercase">Subject:</label>
+                      <p className="text-sm font-medium" dir="rtl" style={{ textAlign: 'right', color: '#dc2626' }}>{emailPreview.subject}</p>>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Body:</label>
+                      <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap" dir="rtl" style={{ textAlign: 'right' }}>
+                        {emailPreview.body}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setEmailPreview(null)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      Back to Edit
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-brand-red text-white rounded-md hover:bg-red-700"
+                    >
+                      Confirm & Send
+                    </button>
+                  </div>
+                </div>
+              )}
+      )}
+            </div>
+            );
+};
+
+            const SupplierCard = ({supplier, openOrderModal, handleEdit, handleDelete}) => {
+  const [expanded, setExpanded] = useState(false);
+
+            return (
+            <div className="border-b border-gray-200 last:border-0">
+              <div
+                className="p-4 flex justify-between items-center cursor-pointer bg-white active:bg-gray-50"
+                onClick={() => setExpanded(!expanded)}
+              >
+                <div className="font-semibold text-gray-900">{supplier.name}</div>
+                <i className={`fas fa-chevron-down transform transition-transform text-gray-400 ${expanded ? 'rotate-180' : ''}`}></i>
+              </div>
+
+              {expanded && (
+                <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3 animation-fade-in">
+                  <div className="grid grid-cols-1 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Contact:</span>
+                      <span className="font-medium text-gray-900">{supplier.contact_person || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Phone:</span>
+                      <span className="font-medium text-gray-900">{supplier.phone || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Email:</span>
+                      <span className="font-medium text-gray-900">{supplier.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Location:</span>
+                      <span className="font-medium text-gray-900">{supplier.location || '-'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
+                    <button
+                      onClick={() => openOrderModal(supplier)}
+                      className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700 shadow-sm"
+                    >
+                      Place an Order
+                    </button>
+                    <div className="flex space-x-2">
+                      <button onClick={() => handleEdit(supplier)} className="p-2 text-brand-red hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button onClick={() => handleDelete(supplier.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">
+                        <i className="fas fa-trash"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setEmailPreview(null)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Back to Edit
-                  </button>
-                  <button
-                    onClick={handleConfirmOrder}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  >
-                    Confirm & Send
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+              )}
+            </div>
+            );
 };
 
-const SupplierCard = ({ supplier, openOrderModal, handleEdit, handleDelete }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="border-b border-gray-200 last:border-0">
-      <div
-        className="p-4 flex justify-between items-center cursor-pointer bg-white active:bg-gray-50"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="font-semibold text-gray-900">{supplier.name}</div>
-        <i className={`fas fa-chevron-down transform transition-transform text-gray-400 ${expanded ? 'rotate-180' : ''}`}></i>
-      </div>
-
-      {expanded && (
-        <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3 animation-fade-in">
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Contact:</span>
-              <span className="font-medium text-gray-900">{supplier.contact_person || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Phone:</span>
-              <span className="font-medium text-gray-900">{supplier.phone || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Email:</span>
-              <span className="font-medium text-gray-900">{supplier.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Location:</span>
-              <span className="font-medium text-gray-900">{supplier.location || '-'}</span>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
-            <button
-              onClick={() => openOrderModal(supplier)}
-              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 shadow-sm"
-            >
-              Place an Order
-            </button>
-            <div className="flex space-x-2">
-              <button onClick={() => handleEdit(supplier)} className="p-2 text-blue-600 hover:text-blue-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
-                <i className="fas fa-edit"></i>
-              </button>
-              <button onClick={() => handleDelete(supplier.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">
-                <i className="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default Suppliers;
+            export default Suppliers;

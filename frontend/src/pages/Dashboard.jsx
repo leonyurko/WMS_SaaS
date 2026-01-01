@@ -66,8 +66,8 @@ const Dashboard = () => {
             title="Low Stock Items"
             value={metrics?.lowStockCount || 0}
             icon="fa-exclamation-triangle"
-            iconColor="text-red-500"
-            bgColor="bg-red-100"
+            iconColor="text-yellow-600"
+            bgColor="bg-yellow-50"
           />
         </Link>
         <Link to="/inventory?status=out">
@@ -75,8 +75,8 @@ const Dashboard = () => {
             title="Out of Stock"
             value={metrics?.outOfStockCount || 0}
             icon="fa-times-circle"
-            iconColor="text-orange-500"
-            bgColor="bg-orange-100"
+            iconColor="text-brand-red"
+            bgColor="bg-red-50"
           />
         </Link>
         <Link to="/inventory-history">
@@ -84,8 +84,8 @@ const Dashboard = () => {
             title="Inventory History"
             value={metrics?.recentTransactions || 0}
             icon="fa-exchange-alt"
-            iconColor="text-green-500"
-            bgColor="bg-green-100"
+            iconColor="text-purple-600"
+            bgColor="bg-purple-50"
           />
         </Link>
         <Link to="/scanner">
@@ -93,8 +93,8 @@ const Dashboard = () => {
             title="Quick Scan"
             value="Scan"
             icon="fa-qrcode"
-            iconColor="text-purple-500"
-            bgColor="bg-purple-100"
+            iconColor="text-brand-red"
+            bgColor="bg-red-50"
           />
         </Link>
         <Link to="/inventory?warehouse=Small">
@@ -102,8 +102,8 @@ const Dashboard = () => {
             title="Small Warehouse"
             value="View"
             icon="fa-warehouse"
-            iconColor="text-indigo-500"
-            bgColor="bg-indigo-100"
+            iconColor="text-brand-red"
+            bgColor="bg-red-50"
           />
         </Link>
         <Link to="/inventory?warehouse=Large">
@@ -111,8 +111,8 @@ const Dashboard = () => {
             title="Large Warehouse"
             value="View"
             icon="fa-industry"
-            iconColor="text-teal-500"
-            bgColor="bg-teal-100"
+            iconColor="text-brand-red"
+            bgColor="bg-red-50"
           />
         </Link>
         <Link to="/wear-equipment">
@@ -120,8 +120,8 @@ const Dashboard = () => {
             title="Wear Equipment"
             value="View"
             icon="fa-tools"
-            iconColor="text-amber-500"
-            bgColor="bg-amber-100"
+            iconColor="text-brand-red"
+            bgColor="bg-red-50"
           />
         </Link>
       </div>

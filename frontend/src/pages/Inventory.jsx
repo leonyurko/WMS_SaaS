@@ -510,7 +510,7 @@ const Inventory = () => {
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
+            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-black flex items-center"
           >
             <i className="fas fa-file-csv mr-2"></i> Export CSV
           </button>
@@ -519,7 +519,7 @@ const Inventory = () => {
               resetForm();
               setShowModal(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="bg-brand-red text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center"
           >
             <i className="fas fa-plus mr-2"></i> Add Item
           </button>
@@ -531,7 +531,7 @@ const Inventory = () => {
           <input
             type="text"
             placeholder="Search inventory..."
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+            className="rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -605,11 +605,11 @@ const Inventory = () => {
                             <img
                               src={images[0] || item.image_url}
                               alt={item.name}
-                              className="h-10 w-10 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500"
+                              className="h-10 w-10 object-cover rounded cursor-pointer hover:ring-2 hover:ring-brand-red"
                               onClick={() => openGallery(item)}
                             />
                             {hasMultipleImages && (
-                              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                              <span className="absolute -top-1 -right-1 bg-brand-red text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                 {images.length}
                               </span>
                             )}
@@ -629,7 +629,7 @@ const Inventory = () => {
                           <img
                             src={item.barcode_image_url}
                             alt="Barcode"
-                            className="h-8 w-auto cursor-pointer hover:ring-2 hover:ring-blue-500"
+                            className="h-8 w-auto cursor-pointer hover:ring-2 hover:ring-brand-red"
                             onClick={() => window.open(item.barcode_image_url, '_blank')}
                           />
                         ) : (
@@ -648,7 +648,7 @@ const Inventory = () => {
                         <button onClick={() => printItem(item)} className="text-gray-600 hover:text-gray-900" title="Print">
                           <i className="fas fa-print"></i>
                         </button>
-                        <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-900" title="Edit">
+                        <button onClick={() => handleEdit(item)} className="text-brand-red hover:text-red-800" title="Edit">
                           <i className="fas fa-edit"></i>
                         </button>
                         <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900" title="Delete">
