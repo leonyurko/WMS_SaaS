@@ -65,23 +65,29 @@ const PostFeed = ({ type, title, currentUser }) => {
     };
 
     return (
-        <div className="bg-gray-50 rounded-lg p-4 h-full flex flex-col relative">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800">
-                    {title}
-                </h3>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 h-full flex flex-col relative overflow-hidden">
+            {/* Header / Frame Top */}
+            <div className={`px-6 py-4 border-b border-gray-100 flex justify-between items-center ${title.includes('Admin') ? 'bg-red-50' : 'bg-gray-50'
+                }`}>
+                <div className="flex items-center gap-3">
+                    <div className={`w-2 h-8 rounded-full ${title.includes('Admin') ? 'bg-brand-red' : 'bg-gray-600'
+                        }`}></div>
+                    <h3 className="text-lg font-bold text-gray-800">
+                        {title}
+                    </h3>
+                </div>
                 {canPost && (
                     <button
                         onClick={() => setShowModal(true)}
-                        className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700 flex items-center"
+                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-brand-red transition-colors flex items-center shadow-sm"
                     >
-                        <i className="fas fa-plus mr-1"></i> Add Update
+                        <i className="fas fa-plus mr-2 text-brand-red"></i> New Post
                     </button>
                 )}
             </div>
 
             {/* Posts List */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-4 p-4 custom-scrollbar bg-white">
                 {loading ? (
                     <div className="text-center text-gray-500 py-4">Loading updates...</div>
                 ) : error ? (

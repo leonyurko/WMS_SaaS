@@ -13,7 +13,7 @@ const PostCard = ({ post, currentUser, onUpdate, onDelete }) => {
     };
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow mb-4 border border-gray-100">
+        <div className="bg-gray-50 p-4 rounded-xl mb-3 hover:bg-gray-50/80 transition-colors border border-transparent hover:border-gray-200">
             <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center space-x-2">
                     <div className="font-semibold text-gray-900">{post.username}</div>
