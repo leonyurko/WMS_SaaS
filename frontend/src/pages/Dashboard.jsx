@@ -126,20 +126,25 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 h-[600px]">
-        {/* Admin Updates Feed */}
-        <PostFeed
-          type="admin"
-          title="Admin Updates"
-          currentUser={currentUser}
-        />
+      <div className="bg-brand-black p-6 rounded-2xl shadow-xl mb-8">
+        <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
+          <i className="fas fa-bullhorn text-brand-red"></i> System Updates
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
+          {/* Admin Updates Feed */}
+          <PostFeed
+            type="admin"
+            title="Admin Updates"
+            currentUser={currentUser}
+          />
 
-        {/* Staff Updates Feed */}
-        <PostFeed
-          type="staff"
-          title="Staff Updates"
-          currentUser={currentUser}
-        />
+          {/* Staff Updates Feed */}
+          <PostFeed
+            type="staff"
+            title="Staff Updates"
+            currentUser={currentUser}
+          />
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
