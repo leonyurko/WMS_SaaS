@@ -598,7 +598,7 @@ const Suppliers = () => {
                     </div>
                     <div className="mb-4">
                       <label className="block text-xs font-medium text-gray-500 uppercase">Subject:</label>
-                      <p className="text-sm font-medium" dir="rtl" style={{ textAlign: 'right', color: '#dc2626' }}>{emailPreview.subject}</p>>
+                      <p className="text-sm font-medium" dir="rtl" style={{ textAlign: 'right', color: '#dc2626' }}>{emailPreview.subject}</p>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Body:</label>
@@ -623,65 +623,68 @@ const Suppliers = () => {
                   </div>
                 </div>
               )}
-      )}
+
             </div>
-            );
+          </div>
+        )}
+    </div>
+  );
 };
 
-            const SupplierCard = ({supplier, openOrderModal, handleEdit, handleDelete}) => {
+const SupplierCard = ({ supplier, openOrderModal, handleEdit, handleDelete }) => {
   const [expanded, setExpanded] = useState(false);
 
-            return (
-            <div className="border-b border-gray-200 last:border-0">
-              <div
-                className="p-4 flex justify-between items-center cursor-pointer bg-white active:bg-gray-50"
-                onClick={() => setExpanded(!expanded)}
-              >
-                <div className="font-semibold text-gray-900">{supplier.name}</div>
-                <i className={`fas fa-chevron-down transform transition-transform text-gray-400 ${expanded ? 'rotate-180' : ''}`}></i>
-              </div>
+  return (
+    <div className="border-b border-gray-200 last:border-0">
+      <div
+        className="p-4 flex justify-between items-center cursor-pointer bg-white active:bg-gray-50"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="font-semibold text-gray-900">{supplier.name}</div>
+        <i className={`fas fa-chevron-down transform transition-transform text-gray-400 ${expanded ? 'rotate-180' : ''}`}></i>
+      </div>
 
-              {expanded && (
-                <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3 animation-fade-in">
-                  <div className="grid grid-cols-1 gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Contact:</span>
-                      <span className="font-medium text-gray-900">{supplier.contact_person || '-'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Phone:</span>
-                      <span className="font-medium text-gray-900">{supplier.phone || '-'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Email:</span>
-                      <span className="font-medium text-gray-900">{supplier.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Location:</span>
-                      <span className="font-medium text-gray-900">{supplier.location || '-'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
-                    <button
-                      onClick={() => openOrderModal(supplier)}
-                      className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700 shadow-sm"
-                    >
-                      Place an Order
-                    </button>
-                    <div className="flex space-x-2">
-                      <button onClick={() => handleEdit(supplier)} className="p-2 text-brand-red hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button onClick={() => handleDelete(supplier.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+      {expanded && (
+        <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3 animation-fade-in">
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Contact:</span>
+              <span className="font-medium text-gray-900">{supplier.contact_person || '-'}</span>
             </div>
-            );
+            <div className="flex justify-between">
+              <span className="text-gray-500">Phone:</span>
+              <span className="font-medium text-gray-900">{supplier.phone || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Email:</span>
+              <span className="font-medium text-gray-900">{supplier.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Location:</span>
+              <span className="font-medium text-gray-900">{supplier.location || '-'}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
+            <button
+              onClick={() => openOrderModal(supplier)}
+              className="px-3 py-1 bg-brand-red text-white text-sm rounded hover:bg-red-700 shadow-sm"
+            >
+              Place an Order
+            </button>
+            <div className="flex space-x-2">
+              <button onClick={() => handleEdit(supplier)} className="p-2 text-brand-red hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Edit">
+                <i className="fas fa-edit"></i>
+              </button>
+              <button onClick={() => handleDelete(supplier.id)} className="p-2 text-red-600 hover:text-red-900 bg-white rounded border border-gray-300 shadow-sm" title="Delete">
+                <i className="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
-            export default Suppliers;
+export default Suppliers;
