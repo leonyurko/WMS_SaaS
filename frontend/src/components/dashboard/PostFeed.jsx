@@ -67,7 +67,7 @@ const PostFeed = ({ type, title, currentUser }) => {
     return (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 h-full flex flex-col relative overflow-hidden">
             {/* Header / Frame Top */}
-            <div className={`px-6 py-4 border-b border-gray-100 flex justify-between items-center ${title.includes('Admin') ? 'bg-red-50' : 'bg-gray-50'
+            <div className={`px-4 py-3 md:px-6 md:py-4 border-b border-gray-100 flex justify-between items-center ${title.includes('Admin') ? 'bg-red-50' : 'bg-gray-50'
                 }`}>
                 <div className="flex items-center gap-3">
                     <div className={`w-2 h-8 rounded-full ${title.includes('Admin') ? 'bg-brand-red' : 'bg-gray-600'

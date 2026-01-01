@@ -126,11 +126,11 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      <div className="bg-brand-black p-6 rounded-2xl shadow-xl mb-8">
+      <div className="bg-brand-black p-4 md:p-6 rounded-2xl shadow-xl mb-8">
         <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
           <i className="fas fa-bullhorn text-brand-red"></i> System Updates
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[800px] lg:h-[600px]">
           {/* Admin Updates Feed */}
           <PostFeed
             type="admin"
