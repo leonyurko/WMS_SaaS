@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import logo from '../assets/Serverfarm-logo-secondary-white.png';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -24,7 +25,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <i className="fas fa-warehouse text-6xl text-brand-red"></i>
+            <img src={logo} alt="Serverfarm" className="h-16 w-auto" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Warehouse Management System
@@ -80,10 +81,7 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="text-center text-sm text-gray-600">
-            <p>Default credentials:</p>
-            <p className="font-mono">admin / password123</p>
-          </div>
+
         </form>
       </div>
     </div>
