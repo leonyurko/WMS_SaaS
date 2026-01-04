@@ -97,31 +97,31 @@ const Transactions = () => {
           />
         </div>
         <div className="flex gap-4 items-end flex-wrap">
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
             <input
               type="date"
               name="dateFrom"
-              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={filters.dateFrom}
               onChange={handleFilterChange}
             />
           </div>
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
             <input
               type="date"
               name="dateTo"
-              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={filters.dateTo}
               onChange={handleFilterChange}
             />
           </div>
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
             <select
               name="productId"
-              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={filters.productId}
               onChange={handleFilterChange}
             >
@@ -131,11 +131,11 @@ const Transactions = () => {
               ))}
             </select>
           </div>
-          <div>
+          <div className="w-full sm:w-auto">
             <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
             <select
               name="userId"
-              className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={filters.userId}
               onChange={handleFilterChange}
             >
@@ -160,7 +160,8 @@ const Transactions = () => {
         <div className="text-center py-8">Loading...</div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -212,6 +213,38 @@ const Transactions = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile View */}
+          <div className="md:hidden space-y-4 p-4">
+            {transactions.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">No transactions found</div>
+            ) : (
+              transactions.map((tx) => (
+                <div key={tx.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm text-gray-500">{new Date(tx.created_at).toLocaleString()}</span>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(tx.transaction_type)}`}>
+                      {getTypeLabel(tx.transaction_type)}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="font-medium text-gray-900">{tx.product_name}</div>
+                    <div className="text-xs text-gray-500">{tx.product_barcode}</div>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div><i className="fas fa-warehouse w-4 text-center"></i> {tx.warehouse_name || '-'}</div>
+                      <div><i className="fas fa-user w-4 text-center"></i> {tx.user_name}</div>
+                      {tx.reason && <div><i className="fas fa-comment w-4 text-center"></i> {tx.reason}</div>}
+                    </div>
+                    <div className="font-mono font-bold text-lg">
+                      {tx.transaction_type === 'addition' ? '+' : '-'}{tx.quantity}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

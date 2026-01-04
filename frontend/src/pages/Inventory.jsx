@@ -409,16 +409,16 @@ const Inventory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">Inventory Management</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {currentUser?.role === 'Admin' && (
             <>
               <button
                 onClick={() => { setWarehouseName(''); setEditingWarehouse(null); setShowWarehouseModal(true); }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 flex items-center text-sm flex-1 md:flex-none justify-center"
               >
-                <i className="fas fa-warehouse mr-2"></i> + New Warehouse
+                <i className="fas fa-warehouse mr-2"></i> New Warehouse
               </button>
               <button
                 onClick={() => {
@@ -426,25 +426,25 @@ const Inventory = () => {
                   setCategoryForm({ name: '', description: '', parentId: '' });
                   setShowCategoryModal(true);
                 }}
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center ml-2"
+                className="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 flex items-center text-sm flex-1 md:flex-none justify-center"
               >
-                <i className="fas fa-tags mr-2"></i> Manage Categories
+                <i className="fas fa-tags mr-2"></i> Categories
               </button>
             </>
           )}
 
           <button
             onClick={handleExport}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-black flex items-center"
+            className="bg-gray-800 text-white px-3 py-2 rounded-md hover:bg-black flex items-center text-sm flex-1 md:flex-none justify-center"
           >
-            <i className="fas fa-file-csv mr-2"></i> Export CSV
+            <i className="fas fa-file-csv mr-2"></i> Export
           </button>
           <button
             onClick={() => {
               resetForm();
               setShowModal(true);
             }}
-            className="bg-brand-red text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center"
+            className="bg-brand-red text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center text-sm flex-1 md:flex-none justify-center"
           >
             <i className="fas fa-plus mr-2"></i> Add Item
           </button>
@@ -600,9 +600,86 @@ const Inventory = () => {
             </table>
           </div>
 
-          {/* Mobile View - Placeholder or simplified if needed, keeping empty for brevity if original was complex */}
-          <div className="md:hidden p-4 text-center text-gray-500">
-            Mobile view updates pending...
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {inventory.map((item) => {
+              const images = item.image_urls || [];
+              const hasMultipleImages = images.length > 1;
+              return (
+                <div key={item.id} className="bg-white p-4 rounded-lg shadow border border-gray-100">
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      {item.image_url || images.length > 0 ? (
+                        <div className="relative">
+                          <img
+                            src={images[0] || item.image_url}
+                            alt={item.name}
+                            className="h-20 w-20 object-cover rounded cursor-pointer"
+                            onClick={() => openGallery(item)}
+                          />
+                          {hasMultipleImages && (
+                            <span className="absolute -top-1 -right-1 bg-brand-red text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                              {images.length}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-20 w-20 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                          <i className="fas fa-image text-2xl"></i>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
+                          <p className="text-xs text-gray-500">{item.category_name}</p>
+                        </div>
+                        <span className="font-mono text-lg font-bold text-gray-900">{item.current_stock}</span>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <i className="fas fa-barcode text-xs w-4"></i>
+                          <span className="truncate">{item.barcode}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-1">
+                          <i className="fas fa-warehouse text-xs w-4"></i>
+                          <span className="truncate">{item.warehouse_name} / {item.location}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stock Locations Details if Multiple */}
+                  {item.stock_locations && item.stock_locations.length > 1 && (
+                    <div className="mt-3 text-xs bg-gray-50 p-2 rounded">
+                      <span className="font-medium text-gray-500">Other Locations:</span>
+                      {item.stock_locations.slice(1).map((loc, i) => (
+                        <div key={i} className="flex justify-between mt-1">
+                          <span>{loc.warehouse_name} - {loc.location}</span>
+                          <span className="font-mono">Qty: {loc.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-end gap-3 border-t pt-3">
+                    <button onClick={() => navigate(`/wear-equipment?itemId=${item.id}&itemName=${encodeURIComponent(item.name)}`)} className="text-amber-600 p-2" title="Report Wear">
+                      <i className="fas fa-tools"></i>
+                    </button>
+                    <button onClick={() => printItem(item)} className="text-gray-600 p-2" title="Print">
+                      <i className="fas fa-print"></i>
+                    </button>
+                    <button onClick={() => handleEdit(item)} className="text-brand-red p-2" title="Edit">
+                      <i className="fas fa-edit"></i>
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="text-red-600 p-2" title="Delete">
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

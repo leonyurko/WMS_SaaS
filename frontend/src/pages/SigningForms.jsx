@@ -239,7 +239,8 @@ const EquipmentBorrowing = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <table className="w-full">
+                    {/* Desktop View */}
+                    <table className="hidden md:table w-full">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
@@ -282,6 +283,50 @@ const EquipmentBorrowing = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Mobile View */}
+                    <div className="md:hidden space-y-4 p-4">
+                        {tickets.map(ticket => (
+                            <div key={ticket.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div className="font-semibold">{ticket.first_name} {ticket.last_name}</div>
+                                        <div className="text-xs text-gray-500">{ticket.company_name}</div>
+                                    </div>
+                                    <span className={`px-2 py-1 text-xs rounded-full ${ticket.status === 'open'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                        {ticket.status}
+                                    </span>
+                                </div>
+                                <div className="mb-3 space-y-1 text-sm text-gray-600">
+                                    <div className="flex items-center gap-2">
+                                        <i className="fas fa-tools w-4 text-center"></i>
+                                        <span className="font-medium">{ticket.equipment_name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <i className="fas fa-calendar w-4 text-center"></i>
+                                        <span>{formatDate(ticket.signed_at)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <i className="fas fa-phone w-4 text-center"></i>
+                                        <span>{ticket.phone}</span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-3 pt-3 border-t">
+                                    <button onClick={() => viewTicket(ticket)} className="text-brand-red flex items-center gap-1 hover:text-red-800">
+                                        <i className="fas fa-eye"></i> View
+                                    </button>
+                                    {ticket.status === 'open' && (
+                                        <button onClick={() => archiveTicket(ticket.id)} className="text-orange-600 flex items-center gap-1 hover:text-orange-900">
+                                            <i className="fas fa-archive"></i> Archive
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                     {tickets.length === 0 && (
                         <div className="text-center py-12 text-gray-500">
                             No {activeTab} tickets
