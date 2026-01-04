@@ -94,7 +94,8 @@ const schemas = {
   updateStock: Joi.object({
     quantity: Joi.number().integer().required(),
     reason: Joi.string().required().min(1).max(500),
-    type: Joi.string().valid('addition', 'deduction').required()
+    type: Joi.string().valid('addition', 'deduction').required(),
+    warehouseId: Joi.string().uuid().allow(null, '')
   }),
 
   // Category creation validation
