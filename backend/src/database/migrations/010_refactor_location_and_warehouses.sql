@@ -1,7 +1,5 @@
 -- Migration: Refactor Inventory Location and Introduce Warehouses table
-
--- 0. Drop dependent views that use the 'shelf' or 'shelf_column'
-DROP VIEW IF EXISTS v_low_stock_items;
+-- UPDATED: Skipped dropping columns to avoid dependency issues with Views/Functions.
 
 -- 1. Create warehouses table
 CREATE TABLE IF NOT EXISTS warehouses (
@@ -33,13 +31,11 @@ SET location = TRIM(BOTH ' ' FROM CONCAT(COALESCE(shelf, ''), ' ', COALESCE(shel
 -- 6. Setup indexes
 CREATE INDEX IF NOT EXISTS idx_inventory_warehouse_id ON inventory(warehouse_id);
 
--- 7. Drop old columns
-ALTER TABLE inventory DROP COLUMN IF EXISTS shelf;
-ALTER TABLE inventory DROP COLUMN IF EXISTS shelf_column;
+-- 7. [SKIPPED] Drop old columns - Keeping them to avoid 'cannot drop column' dependency errors
+-- ALTER TABLE inventory DROP COLUMN IF EXISTS shelf;
+-- ALTER TABLE inventory DROP COLUMN IF EXISTS shelf_column;
 
--- 8. Re-create the view using the new schema (optional, but good practice if other tools use it)
--- v_low_stock_items usually selects * from inventory or specific columns.
--- If we recreate it, it will pick up the new columns and ignore the dropped ones.
+-- 8. Re-create/Update the view (Optional, ensuring it works with new schema if we wanted to default to it)
 CREATE OR REPLACE VIEW v_low_stock_items AS
 SELECT 
     i.id,
