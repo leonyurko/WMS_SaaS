@@ -316,6 +316,7 @@ const updateInventory = async (id, data) => {
   );
 
   const updatedItem = result.rows[0];
+  console.log(`[updateInventory] Updated Item ID: ${id}`, updatedItem);
 
   // Sync item_warehouses if primary warehouse/location changed
   if (
@@ -326,7 +327,10 @@ const updateInventory = async (id, data) => {
     const newWarehouseId = updatedItem.warehouse_id;
     const newLocation = updatedItem.location;
 
+    console.log(`[updateInventory] Sync check: Old W=${oldWarehouseId}, New W=${newWarehouseId}, Old Loc=${oldItem.location}, New Loc=${newLocation}`);
+
     if (oldWarehouseId && newWarehouseId && oldWarehouseId !== newWarehouseId) {
+      console.log('[updateInventory] Sync: Warehouse changed. Moving stock.');
       // Warehouse changed: Move stock
       // Check if target warehouse already has an entry
       const existingTarget = await query(
@@ -335,6 +339,7 @@ const updateInventory = async (id, data) => {
       );
 
       if (existingTarget.rows.length > 0) {
+        console.log('[updateInventory] Target warehouse exists. Merging.');
         // Target exists: Merge (add quantity from old to new, delete old)
         const oldEntry = await query(
           'SELECT quantity FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
@@ -353,6 +358,7 @@ const updateInventory = async (id, data) => {
           );
         }
       } else {
+        console.log('[updateInventory] Target does not exist. Updating old record.');
         // Target does not exist: Update the warehouse_id on the existing record
         await query(
           'UPDATE item_warehouses SET warehouse_id = $1, location = $2 WHERE inventory_id = $3 AND warehouse_id = $4',
@@ -360,12 +366,14 @@ const updateInventory = async (id, data) => {
         );
       }
     } else if (oldWarehouseId === newWarehouseId && data.location !== undefined) {
+      console.log('[updateInventory] Sync: Only location changed.');
       // Only location changed: Update location string for this warehouse
       await query(
         'UPDATE item_warehouses SET location = $1 WHERE inventory_id = $2 AND warehouse_id = $3',
         [newLocation, id, newWarehouseId]
       );
     } else if (!oldWarehouseId && newWarehouseId) {
+      console.log('[updateInventory] Sync: Was orphan, now assigned.');
       // Was orphan, now assigned to warehouse: Create new entry
       // Use current_stock as quantity since it was an orphan
       await query(
