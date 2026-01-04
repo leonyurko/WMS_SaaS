@@ -320,8 +320,8 @@ const Scanner = () => {
                       Stock in {warehouses.find(w => w.id === selectedWarehouse)?.name || 'Selected Warehouse'}
                     </span>
                     <span className={`text-xl font-bold ${(item.stock_locations?.find(l => l.warehouse_id === selectedWarehouse)?.quantity || 0) <= item.min_threshold
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                      ? 'text-red-600'
+                      : 'text-green-600'
                       }`}>
                       {item.stock_locations?.find(l => l.warehouse_id === selectedWarehouse)?.quantity || 0}
                     </span>
@@ -368,9 +368,17 @@ const Scanner = () => {
                       onChange={(e) => setSelectedWarehouse(e.target.value)}
                     >
                       <option value="">Select Warehouse</option>
-                      {warehouses.map(w => (
-                        <option key={w.id} value={w.id}>{w.name}</option>
-                      ))}
+                      {item && item.stock_locations && item.stock_locations.length > 0 ? (
+                        item.stock_locations.map(loc => (
+                          <option key={loc.warehouse_id} value={loc.warehouse_id}>
+                            {loc.warehouse_name} (Qty: {loc.quantity})
+                          </option>
+                        ))
+                      ) : (
+                        warehouses.map(w => (
+                          <option key={w.id} value={w.id}>{w.name}</option>
+                        ))
+                      )}
                     </select>
                   </div>
 
