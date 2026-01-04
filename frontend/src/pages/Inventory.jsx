@@ -217,24 +217,36 @@ const Inventory = () => {
       return;
     }
 
-    const headers = ['Name', 'Category', 'Sub Category', 'Warehouse', 'Location', 'Stock', 'Min Threshold', 'Status', 'Description', 'Barcode'];
+    const headers = ['Name', 'Category', 'Sub Category', 'Stock Details (Warehouse: Location - Qty)', 'Total Stock', 'Min Threshold', 'Status', 'Description', 'Barcode'];
     const csvContent = [
       headers.join(','),
-      ...inventory.map(item => [
-        `"${item.name}"`,
-        `"${item.category_name || ''}"`,
-        `"${item.sub_category_name || ''}"`,
-        `"${item.warehouse_name || ''}"`, // Display managed Warehouse Name
-        `"${item.location}"`,             // Display Inventory Location
-        item.current_stock,
-        item.min_threshold,
-        item.status,
-        `"${(item.description || '').replace(/"/g, '""')}"`,
-        item.barcode
-      ].join(','))
+      ...inventory.map(item => {
+        // Format all locations
+        let locationsStr = '';
+        if (item.stock_locations && item.stock_locations.length > 0) {
+          locationsStr = item.stock_locations.map(l =>
+            `${l.warehouse_name || 'Unknown'}: ${l.location || 'No Loc'} - Qty: ${l.quantity}`
+          ).join(' | ');
+        } else {
+          locationsStr = `${item.warehouse_name || '-'}: ${item.location || '-'} - Qty: ${item.current_stock}`;
+        }
+
+        return [
+          `"${(item.name || '').replace(/"/g, '""')}"`,
+          `"${(item.category_name || '').replace(/"/g, '""')}"`,
+          `"${(item.sub_category_name || '').replace(/"/g, '""')}"`,
+          `"${locationsStr.replace(/"/g, '""')}"`,
+          item.current_stock,
+          item.min_threshold,
+          item.status,
+          `"${(item.description || '').replace(/"/g, '""')}"`,
+          `"${item.barcode}"`
+        ].join(',');
+      })
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Add Byte Order Mark (BOM) for Excel UTF-8 compatibility
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
