@@ -8,12 +8,14 @@ const Transactions = () => {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
     type: '',
     productId: '',
-    userId: ''
+    userId: '',
+    search: ''
   });
 
   useEffect(() => {
@@ -21,6 +23,15 @@ const Transactions = () => {
     loadTransactions();
     loadFiltersData();
   }, [setPageTitle, filters]);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchTerm }));
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const loadFiltersData = async () => {
     try {
@@ -47,6 +58,7 @@ const Transactions = () => {
       if (filters.dateTo) params.dateTo = filters.dateTo;
       if (filters.productId) params.productId = filters.productId;
       if (filters.userId) params.userId = filters.userId;
+      if (filters.search) params.search = filters.search;
 
       const response = await api.get('/transactions', { params });
       if (response.data.status === 'success') {
@@ -75,6 +87,15 @@ const Transactions = () => {
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by product, user, or type..."
+            className="w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         <div className="flex gap-4 items-end flex-wrap">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>

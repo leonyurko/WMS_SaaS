@@ -20,12 +20,25 @@ const createTransaction = async (data) => {
  * Get all transactions with filters and pagination
  */
 const getTransactions = async (filters = {}, pagination = {}) => {
-  const { dateFrom, dateTo, productId, userId, page = 1, limit = 50 } = { ...filters, ...pagination };
+  const { dateFrom, dateTo, productId, userId, search, page = 1, limit = 50 } = { ...filters, ...pagination };
   const offset = (page - 1) * limit;
 
   let whereConditions = [];
   let params = [];
   let paramCount = 1;
+
+  // Search filter (Type, Product Name, User Name)
+  if (search) {
+    const searchParamPosition = paramCount;
+    // Using ILIKE for case-insensitive partial match
+    whereConditions.push(`(
+      t.transaction_type ILIKE $${searchParamPosition} OR 
+      i.name ILIKE $${searchParamPosition} OR 
+      u.username ILIKE $${searchParamPosition}
+    )`);
+    params.push(`%${search}%`);
+    paramCount++;
+  }
 
   // Date range filter
   if (dateFrom) {

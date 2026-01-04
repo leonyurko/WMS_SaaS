@@ -6,10 +6,10 @@ const transactionService = require('../services/transactionService');
  */
 const getAllTransactions = async (req, res, next) => {
   try {
-    const { dateFrom, dateTo, productId, userId, page, limit } = req.query;
+    const { dateFrom, dateTo, productId, userId, search, page, limit } = req.query;
 
     const result = await transactionService.getTransactions(
-      { dateFrom, dateTo, productId, userId },
+      { dateFrom, dateTo, productId, userId, search },
       { page, limit }
     );
 
