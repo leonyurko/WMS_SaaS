@@ -38,7 +38,58 @@ const createCategory = async (req, res, next) => {
   }
 };
 
+/**
+ * Update category
+ * PUT /api/categories/:id
+ */
+const updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const category = await categoryService.updateCategory(id, req.body);
+
+    if (!category) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Category not found'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: { category }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete category
+ * DELETE /api/categories/:id
+ */
+const deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await categoryService.deleteCategory(id);
+
+    res.json({
+      status: 'success',
+      message: 'Category deleted successfully'
+    });
+  } catch (error) {
+    if (error.message.includes('subcategories')) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message
+      });
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   getAllCategories,
-  createCategory
+  createCategory,
+  updateCategory,
+  deleteCategory
 };

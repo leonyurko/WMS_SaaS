@@ -96,6 +96,18 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
       c.name as category_name,
       sc.name as sub_category_name,
       w.name as warehouse_name,
+      (
+        SELECT json_agg(json_build_object(
+          'id', iw.id,
+          'warehouse_id', iw.warehouse_id,
+          'warehouse_name', w2.name,
+          'location', iw.location,
+          'quantity', iw.quantity
+        ))
+        FROM item_warehouses iw
+        LEFT JOIN warehouses w2 ON iw.warehouse_id = w2.id
+        WHERE iw.inventory_id = i.id
+      ) as stock_locations,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -213,7 +225,22 @@ const createInventory = async (data, barcode, codeImages = {}) => {
     ]
   );
 
-  return result.rows[0];
+  const newItem = result.rows[0];
+
+  // Insert initial stock into item_warehouses if warehouseId provided
+  if (warehouseId) {
+    await query(
+      `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
+       VALUES ($1, $2, $3, $4)`,
+      [newItem.id, warehouseId, currentStock || 0, location]
+    );
+  }
+
+  // Handle additional locations (legacy or new?)
+  // If additionalLocations array is passed, we should probably insert them into item_warehouses too.
+  // But for now, let's stick to the primary warehouse insert.
+
+  return newItem;
 };
 
 /**
@@ -294,7 +321,7 @@ const deleteInventory = async (id) => {
 /**
  * Update stock and create transaction
  */
-const updateStock = async (id, quantity, reason, type, userId) => {
+const updateStock = async (id, quantity, reason, type, userId, warehouseId = null) => {
   return await transaction(async (client) => {
     // Get current item
     const itemResult = await client.query('SELECT * FROM inventory WHERE id = $1', [id]);
@@ -304,33 +331,66 @@ const updateStock = async (id, quantity, reason, type, userId) => {
       throw new Error('Item not found');
     }
 
-    // Calculate new stock
-    let newStock = item.current_stock;
+    // Determine which warehouse to update
+    // If warehouseId is provided, use it.
+    // If not, fallback to item's default warehouse_id 
+    const targetWarehouseId = warehouseId || item.warehouse_id;
+
+    if (!targetWarehouseId) {
+      throw new Error('No warehouse specified for stock update');
+    }
+
+    // Check/Get current stock in that warehouse
+    const warehouseStockResult = await client.query(
+      'SELECT * FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
+      [id, targetWarehouseId]
+    );
+
+    let currentWarehouseStock = 0;
+    let locationInWarehouse = item.location; // Default fallback
+
+    if (warehouseStockResult.rows.length > 0) {
+      currentWarehouseStock = warehouseStockResult.rows[0].quantity;
+      locationInWarehouse = warehouseStockResult.rows[0].location;
+    } else {
+      // Create entry if it doesn't exist (e.g. moving item to new warehouse)
+      // Check if we strictly allow this or not. Assuming yes for flexibility.
+    }
+
+    // Calculate new stock for specific warehouse
+    let newWarehouseStock = currentWarehouseStock;
     if (type === 'addition') {
-      newStock += quantity;
+      newWarehouseStock += quantity;
     } else if (type === 'deduction') {
-      newStock -= quantity;
-      if (newStock < 0) {
-        throw new Error('Insufficient stock');
+      newWarehouseStock -= quantity;
+      if (newWarehouseStock < 0) {
+        throw new Error(`Insufficient stock in selected warehouse (Current: ${currentWarehouseStock})`);
       }
     }
 
-    // Update inventory
-    const updateResult = await client.query(
-      'UPDATE inventory SET current_stock = $1 WHERE id = $2 RETURNING *',
-      [newStock, id]
+    // Update item_warehouses
+    await client.query(
+      `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (inventory_id, warehouse_id) 
+         DO UPDATE SET quantity = $3`,
+      [id, targetWarehouseId, newWarehouseStock, locationInWarehouse]
     );
+
+    // Trigger in DB will update inventory.current_stock automatically.
+    // Fetch updated item to return
+    const updatedItemResult = await client.query('SELECT * FROM inventory WHERE id = $1', [id]);
 
     // Create transaction record
     const transactionResult = await client.query(
-      `INSERT INTO transactions (item_id, user_id, quantity, reason, transaction_type)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO transactions (item_id, user_id, quantity, reason, transaction_type, warehouse_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [id, userId, quantity, reason, type]
+      [id, userId, quantity, reason, type, targetWarehouseId]
     );
 
     return {
-      item: updateResult.rows[0],
+      item: updatedItemResult.rows[0],
       transaction: transactionResult.rows[0]
     };
   });

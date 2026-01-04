@@ -214,10 +214,10 @@ const deleteInventory = async (req, res, next) => {
 const updateStock = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { quantity, reason, type } = req.body;
+    const { quantity, reason, type, warehouseId } = req.body;
     const userId = req.user.id;
 
-    const result = await inventoryService.updateStock(id, quantity, reason, type, userId);
+    const result = await inventoryService.updateStock(id, quantity, reason, type, userId, warehouseId);
 
     res.json({
       status: 'success',

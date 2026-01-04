@@ -166,17 +166,25 @@ const Inventory = () => {
   };
 
   const handleEdit = (item) => {
+    const locations = item.stock_locations || [];
+    const primary = locations[0] || {};
+    const extras = locations.slice(1) || [];
+
     setFormData({
       name: item.name,
       description: item.description || '',
       categoryId: item.category_id || '',
       subCategoryId: item.sub_category_id || '',
-      quantity: item.current_stock,
-      warehouseId: item.warehouse_id || '', // Use ID
-      location: item.location || '',        // Now free text
+      quantity: primary.quantity !== undefined ? primary.quantity : item.current_stock, // Use primary location quantity
+      warehouseId: primary.warehouse_id || item.warehouse_id || '',
+      location: primary.location || item.location || '',
       minQuantity: item.min_threshold,
       images: [],
-      additionalLocations: item.additional_locations || [], // Assuming backend returns array of objects {warehouseId, location}
+      additionalLocations: extras.map(l => ({
+        warehouseId: l.warehouse_id,
+        location: l.location,
+        quantity: l.quantity
+      })),
       locationDetails: item.location_details || ''
     });
     setCurrentId(item.id);
@@ -527,10 +535,27 @@ const Inventory = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {item.warehouse_name}
+                        {item.stock_locations && item.stock_locations.length > 0 ? (
+                          item.stock_locations.map((loc, i) => (
+                            <div key={i} className="border-b last:border-0 py-1 border-gray-100 h-8 flex items-center">{loc.warehouse_name}</div>
+                          ))
+                        ) : (
+                          <div className="h-8 flex items-center">{item.warehouse_name}</div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <div>{item.location}</div>
+                        {item.stock_locations && item.stock_locations.length > 0 ? (
+                          item.stock_locations.map((loc, i) => (
+                            <div key={i} className="border-b last:border-0 py-1 border-gray-100 h-8 flex items-center justify-between">
+                              <span>{loc.location}</span>
+                              {loc.quantity !== undefined && (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded ml-2">Qty: {loc.quantity}</span>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="h-8 flex items-center">{item.location}</div>
+                        )}
                       </td>
                       <td className="px-6 py-4 font-semibold">{item.current_stock}</td>
                       <td className="px-6 py-4 text-right space-x-2">
@@ -724,10 +749,19 @@ const Inventory = () => {
                     <input
                       type="text"
                       placeholder="Location"
-                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2 text-sm"
                       value={loc.location}
                       onChange={(e) => handleLocationChange(index, 'location', e.target.value)}
                     />
+                    {/* Allow setting quantity for additional locations too? Not explicitly requested but logical. 
+                        However, pure 'quantity' update is usually done via transactions. 
+                        Let's just show location editing for now to avoid complex stock reconciliation logic in the Edit Form.
+                        Or maybe just a quantity display/edit?
+                        If I add quantity here, backend createInventory/updateInventory needs to handle it.
+                        Current backend updateInventory doesn't sync quantities from additionalLocations.
+                        So I'll leave quantity OUT of additional locations input for now to avoid data mismatch. 
+                        User should use "Scanner" or "Stock Update" to change quantities.
+                     */}
                     <button type="button" onClick={() => removeLocation(index)} className="text-red-500 hover:text-red-700">
                       <i className="fas fa-trash"></i>
                     </button>

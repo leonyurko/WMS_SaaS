@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useOutletContext } from 'react-router-dom';
 import api from '../services/api';
+import { getAllWarehouses } from '../services/warehouseService';
 
 const Scanner = () => {
   const { setPageTitle } = useOutletContext();
@@ -12,6 +13,8 @@ const Scanner = () => {
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState('');
   const [actionType, setActionType] = useState('deduction');
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('');
 
   // Custom Scanner State
   const [cameras, setCameras] = useState([]);
@@ -24,6 +27,7 @@ const Scanner = () => {
 
   useEffect(() => {
     setPageTitle('Barcode Scanner');
+    loadWarehouses();
 
     // Initialize scanner instance
     // We don't start it yet, just prepare the instance
@@ -33,6 +37,15 @@ const Scanner = () => {
       stopScanning();
     };
   }, [setPageTitle]);
+
+  const loadWarehouses = async () => {
+    try {
+      const data = await getAllWarehouses();
+      setWarehouses(data);
+    } catch (err) {
+      console.error("Failed to load warehouses", err);
+    }
+  };
 
   const getCameras = async () => {
     try {
@@ -146,7 +159,14 @@ const Scanner = () => {
     try {
       const response = await api.get(`/inventory/barcode/${decodedText}`);
       if (response.data.status === 'success') {
-        setItem(response.data.data.item);
+        const itemData = response.data.data.item;
+        setItem(itemData);
+        // Default to item's primary warehouse or first available
+        if (itemData.warehouse_id) {
+          setSelectedWarehouse(itemData.warehouse_id);
+        } else if (warehouses.length > 0) {
+          setSelectedWarehouse(warehouses[0].id);
+        }
         // Play a beep sound?
       }
     } catch (err) {
@@ -170,7 +190,8 @@ const Scanner = () => {
       await api.post(`/inventory/${item.id}/stock`, {
         quantity: parseInt(quantity),
         reason: reason || (actionType === 'addition' ? 'Restock' : 'Usage'),
-        type: actionType
+        type: actionType,
+        warehouseId: selectedWarehouse
       });
 
       alert('Stock updated successfully!');
@@ -295,15 +316,19 @@ const Scanner = () => {
 
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-3 rounded">
-                    <span className="block text-xs text-gray-500">Current Stock</span>
-                    <span className={`text-xl font-bold ${item.current_stock <= item.min_threshold ? 'text-red-600' : 'text-green-600'}`}>
-                      {item.current_stock}
+                    <span className="block text-xs text-gray-500">
+                      Stock in {warehouses.find(w => w.id === selectedWarehouse)?.name || 'Selected Warehouse'}
+                    </span>
+                    <span className={`text-xl font-bold ${(item.stock_locations?.find(l => l.warehouse_id === selectedWarehouse)?.quantity || 0) <= item.min_threshold
+                        ? 'text-red-600'
+                        : 'text-green-600'
+                      }`}>
+                      {item.stock_locations?.find(l => l.warehouse_id === selectedWarehouse)?.quantity || 0}
                     </span>
                   </div>
                   <div className="bg-gray-50 p-3 rounded">
-                    <span className="block text-xs text-gray-500">Location</span>
-                    <span className="text-lg font-medium">{item.location}</span>
-                    <span className="text-xs text-gray-400 block">{item.shelf}</span>
+                    <span className="block text-xs text-gray-500">Total Stock (All)</span>
+                    <span className="text-lg font-medium">{item.current_stock}</span>
                   </div>
                 </div>
               </div>
@@ -335,6 +360,20 @@ const Scanner = () => {
                 </div>
 
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Warehouse</label>
+                    <select
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red border p-2"
+                      value={selectedWarehouse}
+                      onChange={(e) => setSelectedWarehouse(e.target.value)}
+                    >
+                      <option value="">Select Warehouse</option>
+                      {warehouses.map(w => (
+                        <option key={w.id} value={w.id}>{w.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Quantity</label>
                     <input

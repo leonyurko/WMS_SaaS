@@ -18,4 +18,19 @@ router.post(
   categoryController.createCategory
 );
 
+// Update category (Manager/Admin only)
+router.put(
+  '/:id',
+  requireManagerOrAdmin,
+  // Schema validation optional or partial
+  categoryController.updateCategory
+);
+
+// Delete category (Manager/Admin only)
+router.delete(
+  '/:id',
+  requireManagerOrAdmin,
+  categoryController.deleteCategory
+);
+
 module.exports = router;

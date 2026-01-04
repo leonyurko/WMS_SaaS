@@ -1,4 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import useAuthStore from './stores/authStore';
+
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
@@ -11,10 +15,8 @@ import WarehouseLayout from './pages/WarehouseLayout';
 import DeliveryNotes from './pages/DeliveryNotes';
 import EquipmentBorrowing from './pages/SigningForms';
 import WearEquipment from './pages/WearEquipment';
+import Categories from './pages/Categories';
 import PublicBorrowing from './pages/PublicSign';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import useAuthStore from './stores/authStore';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -37,6 +39,7 @@ function App() {
           <Route path="scanner" element={<Scanner />} />
           <Route path="inventory-history" element={<Transactions />} />
           <Route path="suppliers" element={<Suppliers />} />
+          <Route path="categories" element={<Categories />} />
           <Route path="email-formats" element={<EmailFormats />} />
           <Route path="users" element={<Users />} />
           <Route path="settings/layout" element={<WarehouseLayout />} />
@@ -45,7 +48,6 @@ function App() {
           <Route path="wear-equipment" element={<WearEquipment />} />
         </Route>
 
-        {/* Public routes for equipment borrowing (no auth required) */}
         <Route path="/borrow/:regulationId" element={<PublicBorrowing />} />
         <Route path="/borrow/t/:token" element={<PublicBorrowing />} />
 

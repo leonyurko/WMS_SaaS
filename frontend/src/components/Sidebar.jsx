@@ -11,6 +11,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const navItems = [
     { path: '/dashboard', icon: 'fa-tachometer-alt', label: 'Dashboard', key: 'dashboard' },
     { path: '/inventory', icon: 'fa-boxes', label: 'Inventory', key: 'inventory' },
+    { path: '/categories', icon: 'fa-tags', label: 'Categories', key: 'categories' },
     { path: '/scanner', icon: 'fa-qrcode', label: 'Scanner', key: 'scanner' },
     { path: '/inventory-history', icon: 'fa-exchange-alt', label: 'Inventory History', key: 'inventory-history' },
     { path: '/suppliers', icon: 'fa-truck', label: 'Suppliers', key: 'suppliers' },
