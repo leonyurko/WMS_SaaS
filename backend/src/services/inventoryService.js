@@ -251,6 +251,14 @@ const updateInventory = async (id, data) => {
   const values = [];
   let paramCount = 1;
 
+  // Fetch current item state before update to handle item_warehouses sync
+  const oldItemResult = await query('SELECT * FROM inventory WHERE id = $1', [id]);
+  const oldItem = oldItemResult.rows[0];
+
+  if (!oldItem) {
+    throw new Error('Item not found');
+  }
+
   if (data.name !== undefined) {
     fields.push(`name = $${paramCount++}`);
     values.push(data.name);
@@ -307,7 +315,69 @@ const updateInventory = async (id, data) => {
     values
   );
 
-  return result.rows[0];
+  const updatedItem = result.rows[0];
+
+  // Sync item_warehouses if primary warehouse/location changed
+  if (
+    (data.warehouseId !== undefined && data.warehouseId !== oldItem.warehouse_id) ||
+    (data.location !== undefined && data.location !== oldItem.location)
+  ) {
+    const oldWarehouseId = oldItem.warehouse_id;
+    const newWarehouseId = updatedItem.warehouse_id;
+    const newLocation = updatedItem.location;
+
+    if (oldWarehouseId && newWarehouseId && oldWarehouseId !== newWarehouseId) {
+      // Warehouse changed: Move stock
+      // Check if target warehouse already has an entry
+      const existingTarget = await query(
+        'SELECT * FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
+        [id, newWarehouseId]
+      );
+
+      if (existingTarget.rows.length > 0) {
+        // Target exists: Merge (add quantity from old to new, delete old)
+        const oldEntry = await query(
+          'SELECT quantity FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
+          [id, oldWarehouseId]
+        );
+
+        if (oldEntry.rows.length > 0) {
+          const qtyToAdd = oldEntry.rows[0].quantity;
+          await query(
+            'UPDATE item_warehouses SET quantity = quantity + $1 WHERE id = $2',
+            [qtyToAdd, existingTarget.rows[0].id]
+          );
+          await query(
+            'DELETE FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
+            [id, oldWarehouseId]
+          );
+        }
+      } else {
+        // Target does not exist: Update the warehouse_id on the existing record
+        await query(
+          'UPDATE item_warehouses SET warehouse_id = $1, location = $2 WHERE inventory_id = $3 AND warehouse_id = $4',
+          [newWarehouseId, newLocation, id, oldWarehouseId]
+        );
+      }
+    } else if (oldWarehouseId === newWarehouseId && data.location !== undefined) {
+      // Only location changed: Update location string for this warehouse
+      await query(
+        'UPDATE item_warehouses SET location = $1 WHERE inventory_id = $2 AND warehouse_id = $3',
+        [newLocation, id, newWarehouseId]
+      );
+    } else if (!oldWarehouseId && newWarehouseId) {
+      // Was orphan, now assigned to warehouse: Create new entry
+      // Use current_stock as quantity since it was an orphan
+      await query(
+        `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (inventory_id, warehouse_id) DO UPDATE SET location = $4`,
+        [id, newWarehouseId, updatedItem.current_stock || 0, newLocation]
+      );
+    }
+  }
+
+  return updatedItem;
 };
 
 /**
