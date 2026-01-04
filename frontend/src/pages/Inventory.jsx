@@ -247,7 +247,7 @@ const Inventory = () => {
       if (formData.categoryId) data.append('categoryId', formData.categoryId);
       if (formData.subCategoryId) data.append('subCategoryId', formData.subCategoryId);
 
-      data.append('warehouseId', formData.warehouseId); // Send ID
+      if (formData.warehouseId) data.append('warehouseId', formData.warehouseId);
 
       // Send single location field string
       data.append('location', formData.location);
