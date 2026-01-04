@@ -249,6 +249,7 @@ const Users = () => {
                 user={user}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onPermissions={handleOpenPermissions}
               />
             ))}
           </div>
@@ -405,7 +406,7 @@ const Users = () => {
   );
 };
 
-const UserCard = ({ user, onEdit, onDelete }) => {
+const UserCard = ({ user, onEdit, onDelete, onPermissions }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -440,6 +441,13 @@ const UserCard = ({ user, onEdit, onDelete }) => {
             </span>
           </div>
           <div className="flex justify-end space-x-3 pt-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); onPermissions(user); }}
+              className={`${user.role === 'Admin' ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'} flex items-center`}
+              title={user.role === 'Admin' ? 'Admin has full access' : 'Manage Permissions'}
+            >
+              <i className="fas fa-key mr-1"></i> Perms
+            </button>
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(user); }}
               className="text-brand-red hover:text-red-900 flex items-center"

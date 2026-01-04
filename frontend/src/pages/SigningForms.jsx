@@ -153,7 +153,7 @@ const EquipmentBorrowing = () => {
     return (
         <div>
             {/* Tabs */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+            <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit max-w-full overflow-x-auto">
                 {[
                     { id: 'open', label: 'Open Tickets', icon: 'fa-ticket-alt' },
                     { id: 'archived', label: 'Archive', icon: 'fa-archive' },

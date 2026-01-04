@@ -160,57 +160,59 @@ const Transactions = () => {
         <div className="text-center py-8">Loading...</div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {transactions.length === 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                    No transactions found
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
                 </tr>
-              ) : (
-                transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(tx.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(tx.transaction_type)}`}>
-                        {getTypeLabel(tx.transaction_type)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {tx.product_name}
-                      <div className="text-xs text-gray-500">{tx.product_barcode}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {tx.warehouse_name || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 font-mono">
-                      {tx.transaction_type === 'addition' ? '+' : '-'}{tx.quantity}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {tx.user_name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {tx.reason || '-'}
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                      No transactions found
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  transactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                        {new Date(tx.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(tx.transaction_type)}`}>
+                          {getTypeLabel(tx.transaction_type)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {tx.product_name}
+                        <div className="text-xs text-gray-500">{tx.product_barcode}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {tx.warehouse_name || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 font-mono">
+                        {tx.transaction_type === 'addition' ? '+' : '-'}{tx.quantity}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {tx.user_name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {tx.reason || '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
