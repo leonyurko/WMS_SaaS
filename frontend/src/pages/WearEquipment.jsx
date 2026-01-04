@@ -26,6 +26,8 @@ const WearEquipment = () => {
     const [selectedReport, setSelectedReport] = useState(null);
     const [inventoryItems, setInventoryItems] = useState([]);
     const [inventorySearch, setInventorySearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -64,16 +66,26 @@ const WearEquipment = () => {
     }, [searchParams, setSearchParams]);
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
         if (activeTab) {
             loadReports();
         }
-    }, [activeTab]);
+    }, [activeTab, debouncedSearch]);
 
     const loadData = async () => {
         setLoading(true);
         try {
             const [reportsData, statsData] = await Promise.all([
-                fetchWearReports({ status: activeTab === 'all' ? undefined : activeTab }),
+                fetchWearReports({
+                    status: activeTab === 'all' ? undefined : activeTab,
+                    search: debouncedSearch
+                }),
                 fetchWearStats()
             ]);
             setReports(reportsData || []);
@@ -87,7 +99,10 @@ const WearEquipment = () => {
 
     const loadReports = async () => {
         try {
-            const reportsData = await fetchWearReports({ status: activeTab === 'all' ? undefined : activeTab });
+            const reportsData = await fetchWearReports({
+                status: activeTab === 'all' ? undefined : activeTab,
+                search: debouncedSearch
+            });
             setReports(reportsData || []);
         } catch (err) {
             console.error('Failed to load wear reports:', err);
@@ -289,356 +304,374 @@ const WearEquipment = () => {
                 </button>
             </div>
 
-            {/* Reports List */}
-            {loading ? (
-                <div className="text-center py-8 text-gray-500">Loading...</div>
-            ) : reports.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-                    <i className="fas fa-tools text-4xl mb-4 text-gray-300"></i>
-                    <p>No {activeTab} wear reports found</p>
-                </div>
-            ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    {reports.map(report => (
-                        <div key={report.id} className="border-b border-gray-200 last:border-0 p-4 hover:bg-gray-50">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-start space-x-4">
-                                    {/* Item Image */}
-                                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                        {report.item_image_url ? (
-                                            <img
-                                                src={`${getApiBaseUrl()}${report.item_image_url}`}
-                                                alt={report.item_name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                                <i className="fas fa-box text-2xl"></i>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {/* Details */}
-                                    <div>
-                                        <div className="flex items-center space-x-2 mb-1">
-                                            <h3 className="font-semibold text-gray-800">{report.item_name}</h3>
-                                            {getSeverityBadge(report.severity)}
-                                            {getStatusBadge(report.status)}
-                                        </div>
-                                        <p className="text-sm text-gray-600 mb-1">
-                                            {report.description || 'No description provided'}
-                                        </p>
-                                        <div className="text-xs text-gray-500">
-                                            <span>Reported by {report.reported_by_username}</span>
-                                            <span className="mx-2">•</span>
-                                            <span>{new Date(report.created_at).toLocaleDateString()}</span>
-                                            {report.media_urls?.length > 0 && (
-                                                <>
-                                                    <span className="mx-2">•</span>
-                                                    <span><i className="fas fa-image mr-1"></i>{report.media_urls.length} photo(s)</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Actions */}
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => handleViewReport(report)}
-                                        className="p-2 text-brand-red hover:bg-red-50 rounded"
-                                        title="View Details"
-                                    >
-                                        <i className="fas fa-eye"></i>
-                                    </button>
-                                    {report.status === 'open' && (
-                                        <button
-                                            onClick={() => handleResolve(report.id)}
-                                            className="p-2 text-green-600 hover:bg-green-50 rounded"
-                                            title="Mark Resolved"
-                                        >
-                                            <i className="fas fa-check"></i>
-                                        </button>
-                                    )}
-                                    {report.status !== 'archived' && (
-                                        <button
-                                            onClick={() => handleArchive(report.id)}
-                                            className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                                            title="Archive"
-                                        >
-                                            <i className="fas fa-archive"></i>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            </div>
 
-            {/* Create Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <h2 className="text-lg font-semibold">Report Wear</h2>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-4">
-                            {/* Inventory Search */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Select Item *
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="Search inventory..."
-                                    value={inventorySearch}
-                                    onChange={async (e) => {
-                                        setInventorySearch(e.target.value);
-                                        await loadInventory(e.target.value);
-                                    }}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red mb-2"
-                                />
-                                <select
-                                    value={formData.inventoryId}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, inventoryId: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
-                                    required
-                                >
-                                    <option value="">-- Select Item --</option>
-                                    {inventoryItems.map(item => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name} ({item.barcode})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+            <div className="bg-white p-4 rounded-lg shadow mb-6">
+                 <input
+                    type="text"
+                    placeholder="Search reports (Item, Description, User)..."
+                    className="w-full border rounded-md px-3 py-2 focus:ring-brand-red focus:border-brand-red"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
 
-                            {/* Severity */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Severity *
-                                </label>
-                                <select
-                                    value={formData.severity}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, severity: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
-                                    required
-                                >
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="critical">Critical</option>
-                                </select>
-                            </div>
-
-                            {/* Description */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
-                                </label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
-                                    rows={3}
-                                    placeholder="Describe the wear or damage..."
-                                />
-                            </div>
-
-                            {/* Media Upload */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Photos (up to 5)
-                                </label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    className="w-full px-3 py-2 border rounded-lg"
-                                />
-                                {formData.media.length > 0 && (
-                                    <div className="mt-2 text-sm text-gray-600">
-                                        {formData.media.length} file(s) selected
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700"
-                                >
-                                    Create Report
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Detail Modal */}
-            {showDetailModal && selectedReport && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
-                            <h2 className="text-lg font-semibold">Wear Report Details</h2>
-                            <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="p-4">
-                            {/* Item Info */}
-                            <div className="flex items-center space-x-4 mb-4 pb-4 border-b">
-                                <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                                    {selectedReport.item_image_url ? (
+            {/* Reports List */ }
+    {
+        loading ? (
+            <div className="text-center py-8 text-gray-500">Loading...</div>
+        ) : reports.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+                <i className="fas fa-tools text-4xl mb-4 text-gray-300"></i>
+                <p>No {activeTab} wear reports found</p>
+            </div>
+        ) : (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                {reports.map(report => (
+                    <div key={report.id} className="border-b border-gray-200 last:border-0 p-4 hover:bg-gray-50">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-4">
+                                {/* Item Image */}
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                    {report.item_image_url ? (
                                         <img
-                                            src={`${getApiBaseUrl()}${selectedReport.item_image_url}`}
-                                            alt={selectedReport.item_name}
+                                            src={`${getApiBaseUrl()}${report.item_image_url}`}
+                                            alt={report.item_name}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <i className="fas fa-box text-3xl"></i>
+                                            <i className="fas fa-box text-2xl"></i>
                                         </div>
                                     )}
                                 </div>
+                                {/* Details */}
                                 <div>
-                                    <h3 className="text-xl font-semibold">{selectedReport.item_name}</h3>
-                                    <p className="text-sm text-gray-600">
-                                        Barcode: {selectedReport.barcode} • Location: {selectedReport.item_location}
+                                    <div className="flex items-center space-x-2 mb-1">
+                                        <h3 className="font-semibold text-gray-800">{report.item_name}</h3>
+                                        {getSeverityBadge(report.severity)}
+                                        {getStatusBadge(report.status)}
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                        {report.description || 'No description provided'}
                                     </p>
-                                    <div className="flex items-center space-x-2 mt-2">
-                                        {getSeverityBadge(selectedReport.severity)}
-                                        {getStatusBadge(selectedReport.status)}
+                                    <div className="text-xs text-gray-500">
+                                        <span>Reported by {report.reported_by_username}</span>
+                                        <span className="mx-2">•</span>
+                                        <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                                        {report.media_urls?.length > 0 && (
+                                            <>
+                                                <span className="mx-2">•</span>
+                                                <span><i className="fas fa-image mr-1"></i>{report.media_urls.length} photo(s)</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Description */}
-                            <div className="mb-4">
-                                <h4 className="font-medium text-gray-700 mb-1">Description</h4>
-                                <p className="text-gray-600">{selectedReport.description || 'No description provided'}</p>
-                            </div>
-
-                            {/* Reporter Info */}
-                            <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span className="text-gray-500">Reported by:</span>
-                                    <span className="ml-2 font-medium">{selectedReport.reported_by_username}</span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Date:</span>
-                                    <span className="ml-2">{new Date(selectedReport.created_at).toLocaleString()}</span>
-                                </div>
-                                {selectedReport.resolved_by_username && (
-                                    <>
-                                        <div>
-                                            <span className="text-gray-500">Resolved by:</span>
-                                            <span className="ml-2 font-medium">{selectedReport.resolved_by_username}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-500">Resolved at:</span>
-                                            <span className="ml-2">{new Date(selectedReport.resolved_at).toLocaleString()}</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Media Gallery */}
-                            <div className="mb-4">
-                                <h4 className="font-medium text-gray-700 mb-2">Photos</h4>
-                                {selectedReport.media_urls?.length > 0 ? (
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {selectedReport.media_urls.map((url, idx) => (
-                                            <div key={idx} className="relative group">
-                                                <img
-                                                    src={`${getApiBaseUrl()}${url}`}
-                                                    alt={`Wear photo ${idx + 1}`}
-                                                    className="w-full h-24 object-cover rounded-lg cursor-pointer"
-                                                    onClick={() => window.open(`${getApiBaseUrl()}${url}`, '_blank')}
-                                                />
-                                                {selectedReport.status === 'open' && (
-                                                    <button
-                                                        onClick={() => handleRemoveMedia(selectedReport.id, url)}
-                                                        className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <i className="fas fa-times text-xs"></i>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-gray-400 text-sm">No photos attached</p>
-                                )}
-
-                                {/* Upload more */}
-                                {selectedReport.status === 'open' && (
-                                    <div className="mt-3">
-                                        <label className="cursor-pointer text-brand-red hover:text-red-700 text-sm">
-                                            <i className="fas fa-plus mr-1"></i> Add Photo
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    if (e.target.files[0]) {
-                                                        handleUploadMedia(selectedReport.id, e.target.files[0]);
-                                                    }
-                                                }}
-                                            />
-                                        </label>
-                                    </div>
-                                )}
-                            </div>
-
                             {/* Actions */}
-                            <div className="flex justify-end space-x-3 pt-4 border-t">
-                                {selectedReport.status === 'open' && (
-                                    <button
-                                        onClick={() => {
-                                            handleResolve(selectedReport.id);
-                                            setShowDetailModal(false);
-                                        }}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                                    >
-                                        <i className="fas fa-check mr-2"></i>Mark Resolved
-                                    </button>
-                                )}
-                                {selectedReport.status !== 'archived' && (
-                                    <button
-                                        onClick={() => {
-                                            handleArchive(selectedReport.id);
-                                            setShowDetailModal(false);
-                                        }}
-                                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                                    >
-                                        <i className="fas fa-archive mr-2"></i>Archive
-                                    </button>
-                                )}
+                            <div className="flex space-x-2">
                                 <button
-                                    onClick={() => setShowDetailModal(false)}
-                                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                                    onClick={() => handleViewReport(report)}
+                                    className="p-2 text-brand-red hover:bg-red-50 rounded"
+                                    title="View Details"
                                 >
-                                    Close
+                                    <i className="fas fa-eye"></i>
                                 </button>
+                                {report.status === 'open' && (
+                                    <button
+                                        onClick={() => handleResolve(report.id)}
+                                        className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                        title="Mark Resolved"
+                                    >
+                                        <i className="fas fa-check"></i>
+                                    </button>
+                                )}
+                                {report.status !== 'archived' && (
+                                    <button
+                                        onClick={() => handleArchive(report.id)}
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                                        title="Archive"
+                                    >
+                                        <i className="fas fa-archive"></i>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
+                ))}
+            </div>
+        )
+    }
+
+    {/* Create Modal */ }
+    {
+        showModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+                    <div className="flex justify-between items-center p-4 border-b">
+                        <h2 className="text-lg font-semibold">Report Wear</h2>
+                        <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="p-4">
+                        {/* Inventory Search */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Select Item *
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Search inventory..."
+                                value={inventorySearch}
+                                onChange={async (e) => {
+                                    setInventorySearch(e.target.value);
+                                    await loadInventory(e.target.value);
+                                }}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red mb-2"
+                            />
+                            <select
+                                value={formData.inventoryId}
+                                onChange={(e) => setFormData(prev => ({ ...prev, inventoryId: e.target.value }))}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                required
+                            >
+                                <option value="">-- Select Item --</option>
+                                {inventoryItems.map(item => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name} ({item.barcode})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Severity */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Severity *
+                            </label>
+                            <select
+                                value={formData.severity}
+                                onChange={(e) => setFormData(prev => ({ ...prev, severity: e.target.value }))}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                required
+                            >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+
+                        {/* Description */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Description
+                            </label>
+                            <textarea
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                rows={3}
+                                placeholder="Describe the wear or damage..."
+                            />
+                        </div>
+
+                        {/* Media Upload */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Photos (up to 5)
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileChange}
+                                className="w-full px-3 py-2 border rounded-lg"
+                            />
+                            {formData.media.length > 0 && (
+                                <div className="mt-2 text-sm text-gray-600">
+                                    {formData.media.length} file(s) selected
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700"
+                            >
+                                Create Report
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            )}
-        </div>
+            </div>
+        )
+    }
+
+    {/* Detail Modal */ }
+    {
+        showDetailModal && selectedReport && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
+                        <h2 className="text-lg font-semibold">Wear Report Details</h2>
+                        <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div className="p-4">
+                        {/* Item Info */}
+                        <div className="flex items-center space-x-4 mb-4 pb-4 border-b">
+                            <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                                {selectedReport.item_image_url ? (
+                                    <img
+                                        src={`${getApiBaseUrl()}${selectedReport.item_image_url}`}
+                                        alt={selectedReport.item_name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        <i className="fas fa-box text-3xl"></i>
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold">{selectedReport.item_name}</h3>
+                                <p className="text-sm text-gray-600">
+                                    Barcode: {selectedReport.barcode} • Location: {selectedReport.item_location}
+                                </p>
+                                <div className="flex items-center space-x-2 mt-2">
+                                    {getSeverityBadge(selectedReport.severity)}
+                                    {getStatusBadge(selectedReport.status)}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="mb-4">
+                            <h4 className="font-medium text-gray-700 mb-1">Description</h4>
+                            <p className="text-gray-600">{selectedReport.description || 'No description provided'}</p>
+                        </div>
+
+                        {/* Reporter Info */}
+                        <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span className="text-gray-500">Reported by:</span>
+                                <span className="ml-2 font-medium">{selectedReport.reported_by_username}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500">Date:</span>
+                                <span className="ml-2">{new Date(selectedReport.created_at).toLocaleString()}</span>
+                            </div>
+                            {selectedReport.resolved_by_username && (
+                                <>
+                                    <div>
+                                        <span className="text-gray-500">Resolved by:</span>
+                                        <span className="ml-2 font-medium">{selectedReport.resolved_by_username}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Resolved at:</span>
+                                        <span className="ml-2">{new Date(selectedReport.resolved_at).toLocaleString()}</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Media Gallery */}
+                        <div className="mb-4">
+                            <h4 className="font-medium text-gray-700 mb-2">Photos</h4>
+                            {selectedReport.media_urls?.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {selectedReport.media_urls.map((url, idx) => (
+                                        <div key={idx} className="relative group">
+                                            <img
+                                                src={`${getApiBaseUrl()}${url}`}
+                                                alt={`Wear photo ${idx + 1}`}
+                                                className="w-full h-24 object-cover rounded-lg cursor-pointer"
+                                                onClick={() => window.open(`${getApiBaseUrl()}${url}`, '_blank')}
+                                            />
+                                            {selectedReport.status === 'open' && (
+                                                <button
+                                                    onClick={() => handleRemoveMedia(selectedReport.id, url)}
+                                                    className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <i className="fas fa-times text-xs"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-400 text-sm">No photos attached</p>
+                            )}
+
+                            {/* Upload more */}
+                            {selectedReport.status === 'open' && (
+                                <div className="mt-3">
+                                    <label className="cursor-pointer text-brand-red hover:text-red-700 text-sm">
+                                        <i className="fas fa-plus mr-1"></i> Add Photo
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                if (e.target.files[0]) {
+                                                    handleUploadMedia(selectedReport.id, e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex justify-end space-x-3 pt-4 border-t">
+                            {selectedReport.status === 'open' && (
+                                <button
+                                    onClick={() => {
+                                        handleResolve(selectedReport.id);
+                                        setShowDetailModal(false);
+                                    }}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                >
+                                    <i className="fas fa-check mr-2"></i>Mark Resolved
+                                </button>
+                            )}
+                            {selectedReport.status !== 'archived' && (
+                                <button
+                                    onClick={() => {
+                                        handleArchive(selectedReport.id);
+                                        setShowDetailModal(false);
+                                    }}
+                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                                >
+                                    <i className="fas fa-archive mr-2"></i>Archive
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setShowDetailModal(false)}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+        </div >
     );
 };
 

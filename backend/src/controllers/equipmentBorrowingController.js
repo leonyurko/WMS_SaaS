@@ -129,8 +129,8 @@ const deleteRegulation = async (req, res) => {
  */
 const getAllTickets = async (req, res) => {
     try {
-        const { formId, status, page, limit } = req.query;
-        const result = await equipmentBorrowingService.getAllTickets({ formId, status, page, limit });
+        const { formId, status, search, page, limit } = req.query;
+        const result = await equipmentBorrowingService.getAllTickets({ formId, status, search, page, limit });
         res.json(result);
     } catch (error) {
         console.error('Error getting tickets:', error);

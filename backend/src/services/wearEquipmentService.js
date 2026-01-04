@@ -27,6 +27,16 @@ const getAllWearReports = async (filters = {}) => {
         params.push(filters.status);
     }
 
+    if (filters.search) {
+        sql += ` AND (
+            i.name ILIKE $${paramCount} OR 
+            w.description ILIKE $${paramCount} OR 
+            u.username ILIKE $${paramCount}
+        )`;
+        params.push(`%${filters.search}%`);
+        paramCount++;
+    }
+
     if (filters.severity) {
         sql += ` AND w.severity = $${paramCount++}`;
         params.push(filters.severity);

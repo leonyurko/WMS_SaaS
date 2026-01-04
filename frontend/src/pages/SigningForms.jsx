@@ -15,6 +15,8 @@ const EquipmentBorrowing = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
     const [currentTicket, setCurrentTicket] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -23,9 +25,16 @@ const EquipmentBorrowing = () => {
     });
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
         setPageTitle('Equipment Borrowing');
         loadData();
-    }, [setPageTitle, activeTab]);
+    }, [setPageTitle, activeTab, debouncedSearch]);
 
     const loadData = async () => {
         setLoading(true);
@@ -51,7 +60,12 @@ const EquipmentBorrowing = () => {
 
     const loadTickets = async (status) => {
         try {
-            const response = await api.get('/equipment-borrowing/tickets', { params: { status } });
+            const response = await api.get('/equipment-borrowing/tickets', {
+                params: {
+                    status,
+                    search: debouncedSearch
+                }
+            });
             setTickets(response.data.tickets || []);
         } catch (err) {
             console.error('Failed to load tickets:', err);
@@ -216,6 +230,15 @@ const EquipmentBorrowing = () => {
             ) : (
                 /* Tickets View */
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="p-4 border-b">
+                        <input
+                            type="text"
+                            placeholder="Search tickets (Name, Company, Equipment)..."
+                            className="w-full border rounded-md px-3 py-2 focus:ring-brand-red focus:border-brand-red"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                     <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>

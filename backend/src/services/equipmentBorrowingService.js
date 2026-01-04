@@ -109,12 +109,24 @@ const deleteRegulation = async (id) => {
  * Get all borrowing tickets with optional status filter
  */
 const getAllTickets = async (filters = {}) => {
-    const { formId, status, page = 1, limit = 50 } = filters;
+    const { formId, status, search, page = 1, limit = 50 } = filters;
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
     let params = [];
     let paramCount = 1;
+
+    // Search filter
+    if (search) {
+        const searchParamPosition = paramCount;
+        whereConditions.push(`(
+            eb.customer_name ILIKE $${searchParamPosition} OR
+            eb.equipment_name ILIKE $${searchParamPosition} OR
+            eb.company_name ILIKE $${searchParamPosition}
+        )`);
+        params.push(`%${search}%`);
+        paramCount++;
+    }
 
     if (formId) {
         whereConditions.push(`eb.form_id = $${paramCount++}`);

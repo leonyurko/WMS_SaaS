@@ -6,8 +6,8 @@ const wearEquipmentService = require('../services/wearEquipmentService');
  */
 const getAllWearReports = async (req, res) => {
     try {
-        const { status, severity, inventoryId } = req.query;
-        const reports = await wearEquipmentService.getAllWearReports({ status, severity, inventoryId });
+        const { status, severity, inventoryId, search } = req.query;
+        const reports = await wearEquipmentService.getAllWearReports({ status, severity, inventoryId, search });
         res.json({ reports });
     } catch (error) {
         console.error('Error getting wear reports:', error);
