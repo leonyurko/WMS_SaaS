@@ -416,7 +416,7 @@ const updateInventory = async (id, data) => {
            ON CONFLICT (inventory_id, warehouse_id) 
            DO UPDATE SET location = EXCLUDED.location
          `;
-        await client.query(updateExtraQuery, [id, loc.warehouseId, loc.location || '']);
+        await query(updateExtraQuery, [id, loc.warehouseId, loc.location || '']);
       }
     }
   }
