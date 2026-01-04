@@ -6,6 +6,9 @@ const {
     updateWarehouse,
     deleteWarehouse
 } = require('../controllers/warehouseController');
+
+console.log('DEBUG: Imported warehouseController in routes:', require('../controllers/warehouseController'));
+
 const { protect, authorize } = require('../middleware/auth');
 
 router
