@@ -385,6 +385,42 @@ const updateInventory = async (id, data) => {
     }
   }
 
+  // 4. Handle Additional Locations (Sync to item_warehouses)
+  if (data.additionalLocations) {
+    let extras = [];
+    try {
+      extras = typeof data.additionalLocations === 'string'
+        ? JSON.parse(data.additionalLocations)
+        : data.additionalLocations;
+    } catch (e) {
+      console.error('Error parsing additionalLocations for sync:', e);
+    }
+
+    if (Array.isArray(extras)) {
+      console.log('🔄 Syncing additional locations:', extras.length);
+      for (const loc of extras) {
+        // Skip if no warehouseId
+        if (!loc.warehouseId) continue;
+
+        // Skip if this is the SAME as the new primary warehouse (already handled above)
+        if (loc.warehouseId === updatedItem.warehouse_id) {
+          console.log('⚠️ Skipping additional location for primary warehouse:', loc.warehouseId);
+          continue;
+        }
+
+        // Update or Insert the additional location
+        // We default quantity to 0 for new records. We do NOT overwrite quantity for existing records.
+        const updateExtraQuery = `
+           INSERT INTO item_warehouses (inventory_id, warehouse_id, location, quantity)
+           VALUES ($1, $2, $3, 0)
+           ON CONFLICT (inventory_id, warehouse_id) 
+           DO UPDATE SET location = EXCLUDED.location
+         `;
+        await client.query(updateExtraQuery, [id, loc.warehouseId, loc.location || '']);
+      }
+    }
+  }
+
   return updatedItem;
 };
 
