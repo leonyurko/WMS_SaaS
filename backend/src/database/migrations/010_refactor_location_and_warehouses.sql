@@ -36,6 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_inventory_warehouse_id ON inventory(warehouse_id)
 -- ALTER TABLE inventory DROP COLUMN IF EXISTS shelf_column;
 
 -- 8. Re-create/Update the view (Optional, ensuring it works with new schema if we wanted to default to it)
+DROP VIEW IF EXISTS v_low_stock_items;
 CREATE OR REPLACE VIEW v_low_stock_items AS
 SELECT 
     i.id,
