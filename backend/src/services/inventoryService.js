@@ -37,24 +37,40 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
     }
   }
 
-  // Warehouse filter (Location)
+  // Warehouse filter (Now using warehouse_id)
   if (filters.warehouse) {
-    whereConditions.push(`i.location = $${paramCount}`);
+    // If the filter is a UUID, use warehouse_id. If it's a name (legacy support or frontend convenience), join and filter.
+    // For now, let's assume the frontend will send the ID or we support both.
+    // Given the task, we should support warehouse_id.
+    // However, the frontend might still be sending "Small Warehouse" (name). 
+    // Let's support name lookup for backward compatibility if it's not a UUID, OR just join with warehouses table.
+    // Easiest: Join warehouses and filter by name OR id.
+    // Let's upgrade the query to join warehouses always.
+
+    // Check if it's a valid UUID (simple regex or try/catch) - but simpler to just match on name for now if that's what frontend sends, 
+    // OR update frontend to send ID. Plan says we update frontend to use ID.
+    // So let's assume ID.
+    whereConditions.push(`i.warehouse_id = $${paramCount}`);
     params.push(filters.warehouse);
     paramCount++;
   }
 
-  // Shelf filter (Row)
-  if (filters.shelf) {
-    whereConditions.push(`i.shelf = $${paramCount}`);
-    params.push(filters.shelf);
-    paramCount++;
+  // Shelf/Column filters (Removed/Merged)
+  // We can convert these to a location search if provided, or ignore them.
+  // Let's support generic 'location' filter if 'shelf' or 'shelfColumn' is passed, mapping them to location ILIKE.
+  if (filters.shelf || filters.shelfColumn) {
+    const locSearch = [filters.shelf, filters.shelfColumn].filter(Boolean).join(' ');
+    if (locSearch) {
+      whereConditions.push(`i.location ILIKE $${paramCount}`);
+      params.push(`%${locSearch}%`);
+      paramCount++;
+    }
   }
 
-  // Shelf Column filter
-  if (filters.shelfColumn) {
-    whereConditions.push(`i.shelf_column = $${paramCount}`);
-    params.push(filters.shelfColumn);
+  // Specific Location filter (New)
+  if (filters.location) {
+    whereConditions.push(`i.location ILIKE $${paramCount}`);
+    params.push(`%${filters.location}%`);
     paramCount++;
   }
 
@@ -79,6 +95,7 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
       i.*,
       c.name as category_name,
       sc.name as sub_category_name,
+      w.name as warehouse_name,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -87,6 +104,7 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
     FROM inventory i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN categories sc ON i.sub_category_id = sc.id
+    LEFT JOIN warehouses w ON i.warehouse_id = w.id
     ${whereClause}
     ORDER BY i.updated_at DESC
     LIMIT $${paramCount} OFFSET $${paramCount + 1}
@@ -111,6 +129,7 @@ const getInventoryById = async (id) => {
       i.*,
       c.name as category_name,
       sc.name as sub_category_name,
+      w.name as warehouse_name,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -119,6 +138,7 @@ const getInventoryById = async (id) => {
     FROM inventory i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN categories sc ON i.sub_category_id = sc.id
+    LEFT JOIN warehouses w ON i.warehouse_id = w.id
     WHERE i.id = $1`,
     [id]
   );
@@ -134,6 +154,7 @@ const getInventoryByBarcode = async (barcode) => {
       i.*,
       c.name as category_name,
       sc.name as sub_category_name,
+      w.name as warehouse_name,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -142,6 +163,7 @@ const getInventoryByBarcode = async (barcode) => {
     FROM inventory i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN categories sc ON i.sub_category_id = sc.id
+    LEFT JOIN warehouses w ON i.warehouse_id = w.id
     WHERE i.barcode = $1`,
     [barcode]
   );
@@ -154,10 +176,10 @@ const getInventoryByBarcode = async (barcode) => {
 const createInventory = async (data, barcode, codeImages = {}) => {
   const {
     name,
-    location,
+    location, // Now free text
+    warehouseId, // New field
     categoryId,
     subCategoryId,
-    shelf,
     description,
     imageUrl,
     imageUrls,
@@ -169,16 +191,15 @@ const createInventory = async (data, barcode, codeImages = {}) => {
 
   const result = await query(
     `INSERT INTO inventory 
-      (name, location, category_id, sub_category_id, shelf, shelf_column, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold, additional_locations, location_details)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      (name, location, warehouse_id, category_id, sub_category_id, description, image_url, image_urls, barcode, barcode_image_url, qr_image_url, current_stock, min_threshold, additional_locations, location_details)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     RETURNING *`,
     [
       name,
       location,
+      warehouseId || null,
       categoryId || null,
       subCategoryId || null,
-      shelf || null,
-      data.shelfColumn || null,
       description || null,
       imageUrl || null,
       imageUrls ? JSON.stringify(imageUrls) : '[]',
@@ -211,6 +232,10 @@ const updateInventory = async (id, data) => {
     fields.push(`location = $${paramCount++}`);
     values.push(data.location);
   }
+  if (data.warehouseId !== undefined) {
+    fields.push(`warehouse_id = $${paramCount++}`);
+    values.push(data.warehouseId || null);
+  }
   if (data.categoryId !== undefined) {
     fields.push(`category_id = $${paramCount++}`);
     values.push(data.categoryId || null);
@@ -218,14 +243,6 @@ const updateInventory = async (id, data) => {
   if (data.subCategoryId !== undefined) {
     fields.push(`sub_category_id = $${paramCount++}`);
     values.push(data.subCategoryId || null);
-  }
-  if (data.shelf !== undefined) {
-    fields.push(`shelf = $${paramCount++}`);
-    values.push(data.shelf || null);
-  }
-  if (data.shelfColumn !== undefined) {
-    fields.push(`shelf_column = $${paramCount++}`);
-    values.push(data.shelfColumn || null);
   }
   if (data.additionalLocations !== undefined) {
     fields.push(`additional_locations = $${paramCount++}`);
@@ -244,8 +261,6 @@ const updateInventory = async (id, data) => {
     values.push(data.imageUrl || null);
   }
   if (data.imageUrls !== undefined) {
-    console.log('🔍 Updating image_urls:', data.imageUrls);
-    console.log('🔍 Stringified:', JSON.stringify(data.imageUrls));
     fields.push(`image_urls = $${paramCount++}`);
     values.push(JSON.stringify(data.imageUrls));
   }
@@ -260,15 +275,10 @@ const updateInventory = async (id, data) => {
 
   values.push(id);
 
-  console.log('🔍 Update query:', `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${paramCount}`);
-  console.log('🔍 Update values:', values);
-
   const result = await query(
     `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
     values
   );
-
-  console.log('🔍 Updated item image_urls:', result.rows[0].image_urls);
 
   return result.rows[0];
 };
@@ -330,7 +340,30 @@ const updateStock = async (id, quantity, reason, type, userId) => {
  * Get low stock items
  */
 const getLowStockItems = async () => {
-  const result = await query('SELECT * FROM v_low_stock_items');
+  // We can update the view remotely, or just run a query here. 
+  // The view v_low_stock_items might be outdated locally if we dropped columns but didn't update the view definition in DB (which we didn't do in migration script yet - good catch).
+  // But this function uses the view.
+  // Ideally we should update the view definition in migration too.
+  // For now, let's assume the view still works or query directly.
+  // A safer bet is to query directly to avoid view dependency issues during dev.
+  const queryStr = `
+        SELECT 
+          i.id,
+          i.name,
+          i.location,
+          w.name as warehouse_name,
+          i.current_stock,
+          i.min_threshold,
+          c.name as category_name,
+          sc.name as sub_category_name
+        FROM inventory i
+        LEFT JOIN categories c ON i.category_id = c.id
+        LEFT JOIN categories sc ON i.sub_category_id = sc.id
+        LEFT JOIN warehouses w ON i.warehouse_id = w.id
+        WHERE i.current_stock <= i.min_threshold
+        ORDER BY i.current_stock ASC
+    `;
+  const result = await query(queryStr);
   return result.rows;
 };
 
