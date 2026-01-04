@@ -4,6 +4,7 @@ import { fetchInventory, createInventory, updateInventory, deleteInventory } fro
 import { getAllWarehouses, createWarehouse, updateWarehouse, deleteWarehouse as apiDeleteWarehouse } from '../services/warehouseService';
 import { getStoredUser } from '../services/authService';
 import api from '../services/api';
+import categoryService from '../services/categoryService';
 
 const Inventory = () => {
   const { setPageTitle } = useOutletContext();
@@ -30,6 +31,14 @@ const Inventory = () => {
   const [showWarehouseModal, setShowWarehouseModal] = useState(false);
   const [warehouseName, setWarehouseName] = useState('');
   const [editingWarehouse, setEditingWarehouse] = useState(null); // id or null
+
+  // Category Management State
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryMode, setCategoryMode] = useState('list'); // list, create, edit
+  const [selectedParentCategory, setSelectedParentCategory] = useState(null); // for creating subcategory
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryForm, setCategoryForm] = useState({ name: '', description: '', parentId: '' });
+
 
   // Form State
   const [formData, setFormData] = useState({
@@ -404,12 +413,24 @@ const Inventory = () => {
         <h1 className="text-2xl font-semibold text-gray-900">Inventory Management</h1>
         <div className="flex gap-2">
           {currentUser?.role === 'Admin' && (
-            <button
-              onClick={() => { setWarehouseName(''); setEditingWarehouse(null); setShowWarehouseModal(true); }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
-            >
-              <i className="fas fa-warehouse mr-2"></i> + New Warehouse
-            </button>
+            <>
+              <button
+                onClick={() => { setWarehouseName(''); setEditingWarehouse(null); setShowWarehouseModal(true); }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+              >
+                <i className="fas fa-warehouse mr-2"></i> + New Warehouse
+              </button>
+              <button
+                onClick={() => {
+                  setCategoryMode('list');
+                  setCategoryForm({ name: '', description: '', parentId: '' });
+                  setShowCategoryModal(true);
+                }}
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center ml-2"
+              >
+                <i className="fas fa-tags mr-2"></i> Manage Categories
+              </button>
+            </>
           )}
 
           <button
@@ -853,6 +874,168 @@ const Inventory = () => {
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">{editingWarehouse ? 'Update' : 'Create'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">
+                {categoryMode === 'list' ? 'Manage Categories' :
+                  categoryMode === 'create' ? (categoryForm.parentId ? 'New Subcategory' : 'New Category') :
+                    'Edit Category'}
+              </h3>
+              <button onClick={() => setShowCategoryModal(false)} className="text-gray-400 hover:text-gray-600">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {categoryMode === 'list' ? (
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => { setCategoryMode('create'); setCategoryForm({ name: '', description: '', parentId: '' }); }}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                    >
+                      + New Parent Category
+                    </button>
+                  </div>
+                  <div className="border rounded-md divided-y">
+                    {parentCategories.map(parent => (
+                      <div key={parent.id} className="p-3 border-b last:border-0 bg-gray-50">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-semibold">{parent.name}</span>
+                            {parent.description && <p className="text-xs text-gray-500">{parent.description}</p>}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setCategoryMode('create');
+                                setCategoryForm({ name: '', description: '', parentId: parent.id });
+                                setSelectedParentCategory(parent);
+                              }}
+                              className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
+                            >
+                              + Sub
+                            </button>
+                            <button
+                              onClick={() => {
+                                setCategoryMode('edit');
+                                setEditingCategory(parent);
+                                setCategoryForm({ name: parent.name, description: parent.description, parentId: '' });
+                              }}
+                              className="text-blue-600"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button onClick={async () => {
+                              if (window.confirm('Delete category?')) {
+                                try { await categoryService.deleteCategory(parent.id); loadCategories(); } catch (e) { alert(e.message); }
+                              }
+                            }} className="text-red-600">
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                        {/* Subcategories */}
+                        <div className="ml-6 mt-2 space-y-2 border-l-2 border-gray-200 pl-2">
+                          {categories.filter(c => c.parent_id === parent.id).map(sub => (
+                            <div key={sub.id} className="flex justify-between items-center text-sm p-1 hover:bg-gray-100 rounded">
+                              <span>{sub.name}</span>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setCategoryMode('edit');
+                                    setEditingCategory(sub);
+                                    setCategoryForm({ name: sub.name, description: sub.description, parentId: sub.parent_id });
+                                  }}
+                                  className="text-blue-600"
+                                >
+                                  <i className="fas fa-edit"></i>
+                                </button>
+                                <button onClick={async () => {
+                                  if (window.confirm('Delete subcategory?')) {
+                                    try { await categoryService.deleteCategory(sub.id); loadCategories(); } catch (e) { alert(e.message); }
+                                  }
+                                }} className="text-red-600">
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {categories.filter(c => c.parent_id === parent.id).length === 0 && (
+                            <div className="text-xs text-gray-400 italic">No subcategories</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    if (categoryMode === 'create') {
+                      await categoryService.createCategory(categoryForm);
+                      alert('Category created');
+                    } else {
+                      await categoryService.updateCategory(editingCategory.id, categoryForm);
+                      alert('Category updated');
+                    }
+                    loadCategories();
+                    setCategoryMode('list');
+                  } catch (err) {
+                    alert('Failed to save category: ' + (err.response?.data?.message || err.message));
+                  }
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Name</label>
+                      <input
+                        type="text"
+                        required
+                        className="mt-1 block w-full border rounded p-2"
+                        value={categoryForm.name}
+                        onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Description</label>
+                      <textarea
+                        className="mt-1 block w-full border rounded p-2"
+                        value={categoryForm.description}
+                        onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                      />
+                    </div>
+                    {categoryForm.parentId && (
+                      <div className="text-sm text-gray-500">
+                        Parent Category ID: {categoryForm.parentId}
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setCategoryMode('list')}
+                        className="px-4 py-2 border rounded"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
