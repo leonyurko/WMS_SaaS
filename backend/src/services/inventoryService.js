@@ -39,25 +39,12 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
 
   // Warehouse filter (Now using warehouse_id)
   if (filters.warehouse) {
-    // If the filter is a UUID, use warehouse_id. If it's a name (legacy support or frontend convenience), join and filter.
-    // For now, let's assume the frontend will send the ID or we support both.
-    // Given the task, we should support warehouse_id.
-    // However, the frontend might still be sending "Small Warehouse" (name). 
-    // Let's support name lookup for backward compatibility if it's not a UUID, OR just join with warehouses table.
-    // Easiest: Join warehouses and filter by name OR id.
-    // Let's upgrade the query to join warehouses always.
-
-    // Check if it's a valid UUID (simple regex or try/catch) - but simpler to just match on name for now if that's what frontend sends, 
-    // OR update frontend to send ID. Plan says we update frontend to use ID.
-    // So let's assume ID.
     whereConditions.push(`i.warehouse_id = $${paramCount}`);
     params.push(filters.warehouse);
     paramCount++;
   }
 
   // Shelf/Column filters (Removed/Merged)
-  // We can convert these to a location search if provided, or ignore them.
-  // Let's support generic 'location' filter if 'shelf' or 'shelfColumn' is passed, mapping them to location ILIKE.
   if (filters.shelf || filters.shelfColumn) {
     const locSearch = [filters.shelf, filters.shelfColumn].filter(Boolean).join(' ');
     if (locSearch) {
@@ -142,6 +129,18 @@ const getInventoryById = async (id) => {
       c.name as category_name,
       sc.name as sub_category_name,
       w.name as warehouse_name,
+      (
+        SELECT json_agg(json_build_object(
+          'id', iw.id,
+          'warehouse_id', iw.warehouse_id,
+          'warehouse_name', w2.name,
+          'location', iw.location,
+          'quantity', iw.quantity
+        ))
+        FROM item_warehouses iw
+        LEFT JOIN warehouses w2 ON iw.warehouse_id = w2.id
+        WHERE iw.inventory_id = i.id AND iw.warehouse_id IS NOT NULL
+      ) as stock_locations,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -167,6 +166,18 @@ const getInventoryByBarcode = async (barcode) => {
       c.name as category_name,
       sc.name as sub_category_name,
       w.name as warehouse_name,
+      (
+        SELECT json_agg(json_build_object(
+          'id', iw.id,
+          'warehouse_id', iw.warehouse_id,
+          'warehouse_name', w2.name,
+          'location', iw.location,
+          'quantity', iw.quantity
+        ))
+        FROM item_warehouses iw
+        LEFT JOIN warehouses w2 ON iw.warehouse_id = w2.id
+        WHERE iw.inventory_id = i.id AND iw.warehouse_id IS NOT NULL
+      ) as stock_locations,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
         WHEN i.current_stock <= i.min_threshold THEN 'Low Stock'
@@ -188,8 +199,8 @@ const getInventoryByBarcode = async (barcode) => {
 const createInventory = async (data, barcode, codeImages = {}) => {
   const {
     name,
-    location, // Now free text
-    warehouseId, // New field
+    location,
+    warehouseId,
     categoryId,
     subCategoryId,
     description,
@@ -235,10 +246,6 @@ const createInventory = async (data, barcode, codeImages = {}) => {
       [newItem.id, warehouseId, currentStock || 0, location]
     );
   }
-
-  // Handle additional locations (legacy or new?)
-  // If additionalLocations array is passed, we should probably insert them into item_warehouses too.
-  // But for now, let's stick to the primary warehouse insert.
 
   return newItem;
 };
@@ -316,7 +323,6 @@ const updateInventory = async (id, data) => {
   );
 
   const updatedItem = result.rows[0];
-  console.log(`[updateInventory] Updated Item ID: ${id}`, updatedItem);
 
   // Sync item_warehouses if primary warehouse/location changed
   if (
@@ -327,20 +333,15 @@ const updateInventory = async (id, data) => {
     const newWarehouseId = updatedItem.warehouse_id;
     const newLocation = updatedItem.location;
 
-    console.log(`[updateInventory] Sync check: Old W=${oldWarehouseId}, New W=${newWarehouseId}, Old Loc=${oldItem.location}, New Loc=${newLocation}`);
-
     if (oldWarehouseId && newWarehouseId && oldWarehouseId !== newWarehouseId) {
-      console.log('[updateInventory] Sync: Warehouse changed. Moving stock.');
       // Warehouse changed: Move stock
-      // Check if target warehouse already has an entry
       const existingTarget = await query(
         'SELECT * FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
         [id, newWarehouseId]
       );
 
       if (existingTarget.rows.length > 0) {
-        console.log('[updateInventory] Target warehouse exists. Merging.');
-        // Target exists: Merge (add quantity from old to new, delete old)
+        // Target exists: Merge
         const oldEntry = await query(
           'SELECT quantity FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id = $2',
           [id, oldWarehouseId]
@@ -358,24 +359,20 @@ const updateInventory = async (id, data) => {
           );
         }
       } else {
-        console.log('[updateInventory] Target does not exist. Updating old record.');
-        // Target does not exist: Update the warehouse_id on the existing record
+        // Target does not exist: Update (Move)
         await query(
           'UPDATE item_warehouses SET warehouse_id = $1, location = $2 WHERE inventory_id = $3 AND warehouse_id = $4',
           [newWarehouseId, newLocation, id, oldWarehouseId]
         );
       }
     } else if (oldWarehouseId === newWarehouseId && data.location !== undefined) {
-      console.log('[updateInventory] Sync: Only location changed.');
-      // Only location changed: Update location string for this warehouse
+      // Only location changed
       await query(
         'UPDATE item_warehouses SET location = $1 WHERE inventory_id = $2 AND warehouse_id = $3',
         [newLocation, id, newWarehouseId]
       );
     } else if (!oldWarehouseId && newWarehouseId) {
-      console.log('[updateInventory] Sync: Was orphan, now assigned.');
-      // Was orphan, now assigned to warehouse: Create new entry
-      // Use current_stock as quantity since it was an orphan
+      // Was orphan, now assigned
       await query(
         `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
              VALUES ($1, $2, $3, $4)
@@ -400,7 +397,6 @@ const updateInventory = async (id, data) => {
     }
 
     if (Array.isArray(extras)) {
-      console.log('🔄 Syncing additional locations:', extras.length);
       for (const loc of extras) {
         if (!loc.warehouseId) continue;
 
@@ -478,9 +474,6 @@ const updateStock = async (id, quantity, reason, type, userId, warehouseId = nul
     if (warehouseStockResult.rows.length > 0) {
       currentWarehouseStock = warehouseStockResult.rows[0].quantity;
       locationInWarehouse = warehouseStockResult.rows[0].location;
-    } else {
-      // Create entry if it doesn't exist (e.g. moving item to new warehouse)
-      // Check if we strictly allow this or not. Assuming yes for flexibility.
     }
 
     // Calculate new stock for specific warehouse
@@ -526,12 +519,6 @@ const updateStock = async (id, quantity, reason, type, userId, warehouseId = nul
  * Get low stock items
  */
 const getLowStockItems = async () => {
-  // We can update the view remotely, or just run a query here. 
-  // The view v_low_stock_items might be outdated locally if we dropped columns but didn't update the view definition in DB (which we didn't do in migration script yet - good catch).
-  // But this function uses the view.
-  // Ideally we should update the view definition in migration too.
-  // For now, let's assume the view still works or query directly.
-  // A safer bet is to query directly to avoid view dependency issues during dev.
   const queryStr = `
         SELECT 
           i.id,
