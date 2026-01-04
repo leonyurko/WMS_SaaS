@@ -81,10 +81,12 @@ const getTransactions = async (filters = {}, pagination = {}) => {
       t.*,
       i.name as product_name,
       i.barcode as product_barcode,
-      u.username as user_name
+      u.username as user_name,
+      w.name as warehouse_name
     FROM transactions t
     LEFT JOIN inventory i ON t.item_id = i.id
     LEFT JOIN users u ON t.user_id = u.id
+    LEFT JOIN warehouses w ON t.warehouse_id = w.id
     ${whereClause}
     ORDER BY t.created_at DESC
     LIMIT $${paramCount} OFFSET $${paramCount + 1}

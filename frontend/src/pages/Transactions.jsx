@@ -166,6 +166,7 @@ const Transactions = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
@@ -174,7 +175,7 @@ const Transactions = () => {
             <tbody className="divide-y divide-gray-200">
               {transactions.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                     No transactions found
                   </td>
                 </tr>
@@ -192,6 +193,9 @@ const Transactions = () => {
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {tx.product_name}
                       <div className="text-xs text-gray-500">{tx.product_barcode}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {tx.warehouse_name || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-mono">
                       {tx.transaction_type === 'addition' ? '+' : '-'}{tx.quantity}
