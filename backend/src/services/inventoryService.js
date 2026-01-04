@@ -106,7 +106,7 @@ const getAllInventory = async (filters = {}, pagination = {}) => {
         ))
         FROM item_warehouses iw
         LEFT JOIN warehouses w2 ON iw.warehouse_id = w2.id
-        WHERE iw.inventory_id = i.id
+        WHERE iw.inventory_id = i.id AND iw.warehouse_id IS NOT NULL
       ) as stock_locations,
       CASE 
         WHEN i.current_stock = 0 THEN 'Out of Stock'
@@ -385,7 +385,10 @@ const updateInventory = async (id, data) => {
     }
   }
 
-  // 4. Handle Additional Locations (Sync to item_warehouses)
+  // 4. Handle Additional Locations with Full Reconciliation
+  const validWarehouseIds = [];
+  if (updatedItem.warehouse_id) validWarehouseIds.push(updatedItem.warehouse_id);
+
   if (data.additionalLocations) {
     let extras = [];
     try {
@@ -399,17 +402,13 @@ const updateInventory = async (id, data) => {
     if (Array.isArray(extras)) {
       console.log('🔄 Syncing additional locations:', extras.length);
       for (const loc of extras) {
-        // Skip if no warehouseId
         if (!loc.warehouseId) continue;
 
-        // Skip if this is the SAME as the new primary warehouse (already handled above)
-        if (loc.warehouseId === updatedItem.warehouse_id) {
-          console.log('⚠️ Skipping additional location for primary warehouse:', loc.warehouseId);
-          continue;
-        }
+        validWarehouseIds.push(loc.warehouseId);
 
-        // Update or Insert the additional location
-        // We default quantity to 0 for new records. We do NOT overwrite quantity for existing records.
+        // Skip if same as primary (already handled)
+        if (loc.warehouseId === updatedItem.warehouse_id) continue;
+
         const updateExtraQuery = `
            INSERT INTO item_warehouses (inventory_id, warehouse_id, location, quantity)
            VALUES ($1, $2, $3, 0)
@@ -419,6 +418,19 @@ const updateInventory = async (id, data) => {
         await query(updateExtraQuery, [id, loc.warehouseId, loc.location || '']);
       }
     }
+  }
+
+  // RECONCILIATION: Delete any warehouse entries that are NOT in the valid list
+  if (validWarehouseIds.length > 0) {
+    await query(
+      `DELETE FROM item_warehouses 
+       WHERE inventory_id = $1 
+       AND (warehouse_id IS NULL OR NOT (warehouse_id = ANY($2)))`,
+      [id, validWarehouseIds]
+    );
+  } else {
+    // Fallback cleanup
+    await query('DELETE FROM item_warehouses WHERE inventory_id = $1 AND warehouse_id IS NULL', [id]);
   }
 
   return updatedItem;
