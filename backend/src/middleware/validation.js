@@ -61,6 +61,7 @@ const schemas = {
   createInventory: Joi.object({
     name: Joi.string().required().min(1).max(255),
     location: Joi.string().required().min(1).max(100),
+    warehouseId: Joi.string().uuid().allow(null, ''),
     categoryId: Joi.string().uuid().allow(null, ''),
     subCategoryId: Joi.string().uuid().allow(null, ''),
     shelf: Joi.string().max(50).allow(null, ''),
@@ -76,6 +77,7 @@ const schemas = {
   updateInventory: Joi.object({
     name: Joi.string().min(1).max(255),
     location: Joi.string().min(1).max(100),
+    warehouseId: Joi.string().uuid().allow(null, ''),
     categoryId: Joi.string().uuid().allow(null, ''),
     subCategoryId: Joi.string().uuid().allow(null, ''),
     shelf: Joi.string().max(50).allow(null, ''),
