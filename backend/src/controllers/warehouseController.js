@@ -64,6 +64,13 @@ const deleteWarehouse = async (req, res, next) => {
     }
 };
 
+console.log('DEBUG: Exporting warehouseController functions:', {
+    getAllWarehouses: typeof getAllWarehouses,
+    createWarehouse: typeof createWarehouse,
+    updateWarehouse: typeof updateWarehouse,
+    deleteWarehouse: typeof deleteWarehouse
+});
+
 module.exports = {
     getAllWarehouses,
     createWarehouse,
