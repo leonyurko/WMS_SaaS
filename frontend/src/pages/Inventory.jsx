@@ -217,35 +217,63 @@ const Inventory = () => {
       return;
     }
 
-    const headers = ['Name', 'Category', 'Sub Category', 'Stock Details (Warehouse: Location - Qty)', 'Total Stock', 'Min Threshold', 'Status', 'Description', 'Barcode'];
+    // Sort warehouses alphabetically for consistent column order
+    const sortedWarehouses = [...warehouses].sort((a, b) => a.name.localeCompare(b.name));
+    const warehouseHeaders = sortedWarehouses.map(w => w.name);
+
+    const headers = [
+      'Name',
+      'Category',
+      'Sub Category',
+      ...warehouseHeaders,
+      'Total Stock',
+      'Min Threshold',
+      'Status',
+      'Description',
+      'Barcode'
+    ];
+
     const csvContent = [
       headers.join(','),
       ...inventory.map(item => {
-        // Format all locations
-        let locationsStr = '';
+        // Create a map of warehouseId -> {location, quantity} for quick lookup
+        const locMap = {};
         if (item.stock_locations && item.stock_locations.length > 0) {
-          locationsStr = item.stock_locations.map(l =>
-            `${l.warehouse_name || 'Unknown'}: ${l.location || 'No Loc'} - Qty: ${l.quantity}`
-          ).join(' | ');
-        } else {
-          locationsStr = `${item.warehouse_name || '-'}: ${item.location || '-'} - Qty: ${item.current_stock}`;
+          item.stock_locations.forEach(l => {
+            if (l.warehouse_id) locMap[l.warehouse_id] = l;
+          });
+        } else if (item.warehouse_id) {
+          // Fallback for legacy items without stock_locations populated
+          locMap[item.warehouse_id] = { location: item.location, quantity: item.current_stock };
         }
+
+        // Generate columns for each warehouse
+        const warehouseColumns = sortedWarehouses.map(w => {
+          const data = locMap[w.id];
+          if (data) {
+            // Format: "Location: xxxx - Qty: 99"
+            // Escape quotes inside the string just in case
+            const loc = (data.location || 'No Loc').replace(/"/g, '""');
+            return `"${loc} - Qty: ${data.quantity}"`;
+          }
+          return '""'; // Empty cell if no stock in this warehouse
+        });
 
         return [
           `"${(item.name || '').replace(/"/g, '""')}"`,
           `"${(item.category_name || '').replace(/"/g, '""')}"`,
           `"${(item.sub_category_name || '').replace(/"/g, '""')}"`,
-          `"${locationsStr.replace(/"/g, '""')}"`,
+          ...warehouseColumns,
           item.current_stock,
           item.min_threshold,
           item.status,
-          `"${(item.description || '').replace(/"/g, '""')}"`,
-          `"${item.barcode}"`
+          // Force Excel to treat as text using ="value" syntax to prevent scientific notation
+          `"=""${(item.description || '').replace(/"/g, '""')}"""`,
+          `"=""${(item.barcode || '').replace(/"/g, '""')}"""`
         ].join(',');
       })
     ].join('\n');
 
-    // Add Byte Order Mark (BOM) for Excel UTF-8 compatibility
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
