@@ -16,6 +16,9 @@ const ProtectedRoute = ({ children }) => {
   const accessiblePages = user?.accessiblePages || [];
 
   // Dashboard is always accessible as a fallback
+  // Admin has access to all pages (including settings)
+  if (user?.role === 'Admin') return children;
+
   if (pageKey !== 'dashboard' && !accessiblePages.includes(pageKey)) {
     return <Navigate to="/dashboard" replace />;
   }
