@@ -17,6 +17,7 @@ import EquipmentBorrowing from './pages/SigningForms';
 import WearEquipment from './pages/WearEquipment';
 import Categories from './pages/Categories';
 import PublicBorrowing from './pages/PublicSign';
+import Settings from './pages/Settings';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -46,6 +47,7 @@ function App() {
           <Route path="delivery-notes" element={<DeliveryNotes />} />
           <Route path="equipment-borrowing" element={<EquipmentBorrowing />} />
           <Route path="wear-equipment" element={<WearEquipment />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         <Route path="/borrow/:regulationId" element={<PublicBorrowing />} />

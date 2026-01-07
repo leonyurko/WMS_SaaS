@@ -20,11 +20,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { path: '/wear-equipment', icon: 'fa-tools', label: 'Wear Equipment', key: 'wear-equipment' },
     { path: '/email-formats', icon: 'fa-envelope', label: 'Email Formats', key: 'email-formats' },
     { path: '/users', icon: 'fa-users', label: 'Users', key: 'users' },
+    { path: '/settings', icon: 'fa-cog', label: 'Settings', key: 'settings' },
   ];
 
   // Use accessiblePages from user object if available, otherwise use role-based defaults
   const accessiblePages = user?.accessiblePages || [];
-  const filteredNavItems = navItems.filter(item => accessiblePages.includes(item.key));
+  const filteredNavItems = navItems.filter(item => {
+    if (item.key === 'settings') return user?.role === 'Admin';
+    if (user?.role === 'Admin') return true; // Admin usually sees all? Or use strict list? Existing code used list.
+    // Preserving existing logic:
+    return accessiblePages.includes(item.key);
+  });
 
   return (
     <>

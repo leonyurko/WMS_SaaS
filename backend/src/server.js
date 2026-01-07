@@ -23,6 +23,7 @@ const equipmentBorrowingRoutes = require('./routes/equipmentBorrowingRoutes');
 const wearEquipmentRoutes = require('./routes/wearEquipmentRoutes');
 const permissionsRoutes = require('./routes/permissionsRoutes');
 const warehouseRoutes = require('./routes/warehouseRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 const path = require('path');
 
@@ -90,6 +91,7 @@ app.use('/api/equipment-borrowing', equipmentBorrowingRoutes);
 app.use('/api/wear-equipment', wearEquipmentRoutes);
 app.use('/api/permissions', permissionsRoutes);
 app.use('/api/warehouses', warehouseRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
