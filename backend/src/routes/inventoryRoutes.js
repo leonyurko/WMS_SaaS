@@ -18,10 +18,9 @@ router.get('/barcode/:code', inventoryController.getInventoryByBarcode);
 // Get inventory by ID (all authenticated users)
 router.get('/:id', inventoryController.getInventoryById);
 
-// Create inventory (Manager/Admin only)
+// Create inventory (All authenticated users)
 router.post(
   '/',
-  requireManagerOrAdmin,
   uploadMultipleImages,
   processMultipleImageUpload,
   validateRequest(schemas.createInventory),
@@ -29,10 +28,10 @@ router.post(
   inventoryController.createInventory
 );
 
-// Update inventory (Manager/Admin only)
+// Update inventory (Admin only)
 router.put(
   '/:id',
-  requireManagerOrAdmin,
+  requireAdmin,
   conditionalUploadMultiple,  // Use conditional middleware instead of uploadMultipleImages
   processMultipleImageUpload,
   validateRequest(schemas.updateInventory),

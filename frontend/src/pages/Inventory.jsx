@@ -626,12 +626,16 @@ const Inventory = () => {
                         <button onClick={() => printItem(item)} className="text-gray-600 hover:text-gray-900" title="Print">
                           <i className="fas fa-print"></i>
                         </button>
-                        <button onClick={() => handleEdit(item)} className="text-brand-red hover:text-red-800" title="Edit">
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900" title="Delete">
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        {currentUser?.role === 'Admin' && (
+                          <>
+                            <button onClick={() => handleEdit(item)} className="text-brand-red hover:text-red-800" title="Edit">
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900" title="Delete">
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -710,12 +714,16 @@ const Inventory = () => {
                     <button onClick={() => printItem(item)} className="text-gray-600 p-2" title="Print">
                       <i className="fas fa-print"></i>
                     </button>
-                    <button onClick={() => handleEdit(item)} className="text-brand-red p-2" title="Edit">
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 p-2" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
+                    {currentUser?.role === 'Admin' && (
+                      <>
+                        <button onClick={() => handleEdit(item)} className="text-brand-red p-2" title="Edit">
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} className="text-red-600 p-2" title="Delete">
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
