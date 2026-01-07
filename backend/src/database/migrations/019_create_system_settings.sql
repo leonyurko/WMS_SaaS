@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
     setting_value TEXT,
     description TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by INTEGER
+    updated_by UUID
 );
 
 -- Initial Seed
