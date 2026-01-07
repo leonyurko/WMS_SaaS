@@ -8,6 +8,12 @@ import {
     archiveWearReport,
     uploadWearMedia,
     removeWearMedia,
+    createWearReport,
+    updateWearReport,
+    resolveWearReport,
+    archiveWearReport,
+    uploadWearMedia,
+    removeWearMedia,
     deleteWearReport
 } from '../services/wearEquipmentService';
 import { fetchInventory } from '../services/inventoryService';
@@ -24,6 +30,7 @@ const WearEquipment = () => {
     const [showModal, setShowModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
+    const [editingId, setEditingId] = useState(null);
     const [inventoryItems, setInventoryItems] = useState([]);
     const [inventorySearch, setInventorySearch] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -124,6 +131,19 @@ const WearEquipment = () => {
     const handleOpenModal = async () => {
         await loadInventory();
         setFormData({ inventoryId: '', severity: 'medium', description: '', media: [] });
+        setEditingId(null);
+        setShowModal(true);
+    };
+
+    const handleEdit = async (report) => {
+        await loadInventory(); // Ensure items are loaded to show the name (though we might disable select)
+        setFormData({
+            inventoryId: report.inventory_id,
+            severity: report.severity,
+            description: report.description || '',
+            media: [] // Media update not supported in this form
+        });
+        setEditingId(report.id);
         setShowModal(true);
     };
 
@@ -141,11 +161,19 @@ const WearEquipment = () => {
             return;
         }
         try {
-            await createWearReport(formData);
+            if (editingId) {
+                await updateWearReport(editingId, {
+                    severity: formData.severity,
+                    description: formData.description
+                });
+            } else {
+                await createWearReport(formData);
+            }
             setShowModal(false);
+            setEditingId(null);
             loadData();
         } catch (err) {
-            alert('Failed to create wear report: ' + (err.response?.data?.message || err.message));
+            alert(`Failed to ${editingId ? 'update' : 'create'} wear report: ` + (err.response?.data?.message || err.message));
         }
     };
 
@@ -377,6 +405,20 @@ const WearEquipment = () => {
                                         >
                                             <i className="fas fa-eye"></i>
                                         </button>
+                                        <button
+                                            onClick={() => handleEdit(report)}
+                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                            title="Edit"
+                                        >
+                                            <i className="fas fa-edit"></i>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(report.id)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                            title="Delete"
+                                        >
+                                            <i className="fas fa-trash-alt"></i>
+                                        </button>
                                         {report.status === 'open' && (
                                             <button
                                                 onClick={() => handleResolve(report.id)}
@@ -409,7 +451,7 @@ const WearEquipment = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
                             <div className="flex justify-between items-center p-4 border-b">
-                                <h2 className="text-lg font-semibold">Report Wear</h2>
+                                <h2 className="text-lg font-semibold">{editingId ? 'Edit Wear Report' : 'Report Wear'}</h2>
                                 <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                                     <i className="fas fa-times"></i>
                                 </button>
@@ -433,8 +475,9 @@ const WearEquipment = () => {
                                     <select
                                         value={formData.inventoryId}
                                         onChange={(e) => setFormData(prev => ({ ...prev, inventoryId: e.target.value }))}
-                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red disabled:bg-gray-100"
                                         required
+                                        disabled={!!editingId}
                                     >
                                         <option value="">-- Select Item --</option>
                                         {inventoryItems.map(item => (
@@ -494,6 +537,11 @@ const WearEquipment = () => {
                                             {formData.media.length} file(s) selected
                                         </div>
                                     )}
+                                    {editingId && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            * To manage photos, save changes and use the Detail View.
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Actions */}
@@ -509,7 +557,7 @@ const WearEquipment = () => {
                                         type="submit"
                                         className="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-red-700"
                                     >
-                                        Create Report
+                                        {editingId ? 'Update Report' : 'Create Report'}
                                     </button>
                                 </div>
                             </form>
