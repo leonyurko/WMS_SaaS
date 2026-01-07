@@ -1,5 +1,6 @@
 const { verifyToken } = require('../utils/auth');
 const { findById } = require('../models/userModel');
+const { hasPageAccess } = require('../models/permissionsModel');
 
 /**
  * Middleware to authenticate JWT token
@@ -20,10 +21,10 @@ const authenticateToken = async (req, res, next) => {
 
     // Verify token
     const decoded = verifyToken(token);
-    
+
     // Get user from database
     const user = await findById(decoded.userId);
-    
+
     if (!user) {
       return res.status(401).json({
         status: 'error',
@@ -89,9 +90,45 @@ const requireAdmin = requireRole(['Admin']);
  */
 const requireManagerOrAdmin = requireRole(['Manager', 'Admin']);
 
+/**
+ * Middleware to check if user has access to a specific page
+ * @param {string} pageKey - Key of the page to check
+ */
+const requirePageAccess = (pageKey) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Authentication required'
+        });
+      }
+
+      const hasAccess = await hasPageAccess(req.user.id, req.user.role, pageKey);
+
+      if (!hasAccess) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Insufficient permissions'
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Permission check error:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error'
+      });
+    }
+  };
+};
+
 module.exports = {
   authenticateToken,
   requireRole,
   requireAdmin,
-  requireManagerOrAdmin
+  requireAdmin,
+  requireManagerOrAdmin,
+  requirePageAccess
 };

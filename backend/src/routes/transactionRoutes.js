@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
-const { authenticateToken, requireManagerOrAdmin } = require('../middleware/auth');
+const { authenticateToken, requirePageAccess } = require('../middleware/auth');
 
-// All routes require authentication and Manager/Admin role
+// All routes require authentication and 'inventory-history' page access
 router.use(authenticateToken);
-router.use(requireManagerOrAdmin);
+router.use(requirePageAccess('inventory-history'));
 
 // Get all transactions with filters
 router.get('/', transactionController.getAllTransactions);
