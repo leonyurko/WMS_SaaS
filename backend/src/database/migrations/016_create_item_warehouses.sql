@@ -20,8 +20,7 @@ INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
 SELECT id, warehouse_id, current_stock, location
 FROM inventory
 WHERE warehouse_id IS NOT NULL
-ON CONFLICT (inventory_id, warehouse_id) DO UPDATE 
-SET quantity = EXCLUDED.quantity, location = EXCLUDED.location;
+ON CONFLICT (inventory_id, warehouse_id) DO NOTHING;
 
 -- Update items with no warehouse_id? 
 -- We might want to create a "Default Warehouse" or leave them orphans?
