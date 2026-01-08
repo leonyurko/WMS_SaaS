@@ -511,6 +511,39 @@ const WearEquipment = () => {
                                     </select>
                                 </div>
 
+                                {/* Warehouse Selection (For Verification) */}
+                                {formData.inventoryId && (
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Warehouse Location *
+                                        </label>
+                                        <select
+                                            value={formData.selectedWarehouseId}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, selectedWarehouseId: e.target.value, quantity: 1 }))}
+                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                            required
+                                        >
+                                            <option value="">-- Select location of damaged item --</option>
+                                            {(() => {
+                                                const item = inventoryItems.find(i => i.id === formData.inventoryId);
+                                                if (!item) return null;
+
+                                                // If stock_locations exists, use it
+                                                if (item.stock_locations && item.stock_locations.length > 0) {
+                                                    return item.stock_locations.map(loc => (
+                                                        <option key={loc.warehouse_id} value={loc.warehouse_id}>
+                                                            {loc.warehouse_name} (Qty: {loc.quantity}) {loc.location ? `- ${loc.location}` : ''}
+                                                        </option>
+                                                    ));
+                                                }
+
+                                                // Fallback if no locations found (orphaned stock?)
+                                                return <option value="unknown">Unknown Location (Total: {item.current_stock})</option>;
+                                            })()}
+                                        </select>
+                                    </div>
+                                )}
+
                                 {/* Quantity */}
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
