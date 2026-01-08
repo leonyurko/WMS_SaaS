@@ -70,7 +70,13 @@ const getTransactions = async (filters = {}, pagination = {}) => {
   const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
   // Get total count
-  const countQuery = `SELECT COUNT(*) as total FROM transactions t ${whereClause}`;
+  const countQuery = `
+    SELECT COUNT(*) as total 
+    FROM transactions t 
+    LEFT JOIN inventory i ON t.item_id = i.id
+    LEFT JOIN users u ON t.user_id = u.id
+    ${whereClause}
+  `;
   const countResult = await query(countQuery, params);
   const total = parseInt(countResult.rows[0].total);
 
