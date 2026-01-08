@@ -55,7 +55,10 @@ BEGIN
         -- (Item is in both Bad Warehouse and Main Warehouse - rare if 010 ran cleanly but possible)
         UPDATE item_warehouses main
         SET quantity = main.quantity + sub.quantity,
-            location = COALESCE(main.location, '') || ', ' || sub.name -- Append location info
+            location = CASE 
+                WHEN main.location LIKE '%' || sub.name || '%' THEN main.location 
+                ELSE COALESCE(main.location, '') || ', ' || sub.name 
+            END
         FROM (
             SELECT iw.inventory_id, iw.quantity, w.name
             FROM item_warehouses iw

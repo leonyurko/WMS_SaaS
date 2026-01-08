@@ -17,10 +17,15 @@ CREATE TABLE IF NOT EXISTS warehouses (
 ALTER TABLE inventory ADD COLUMN IF NOT EXISTS warehouse_id UUID REFERENCES warehouses(id) ON DELETE SET NULL;
 
 -- 3. Migrate existing warehouse names from inventory.location to warehouses table
+-- UPDATED: Only treat likely warehouse names as warehouses (containing "Warehouse" or no digits/commas)
 INSERT INTO warehouses (name)
 SELECT DISTINCT location FROM inventory
 WHERE location IS NOT NULL AND location != ''
+AND (location ILIKE '%Warehouse%' OR location NOT SIMILAR TO '%[0-9]%')
 ON CONFLICT (name) DO NOTHING;
+
+-- Ensure Main Warehouse exists for others
+INSERT INTO warehouses (name) VALUES ('Main Warehouse') ON CONFLICT (name) DO NOTHING;
 
 -- 4. Link inventory items to their new warehouse_id
 UPDATE inventory i
@@ -28,9 +33,16 @@ SET warehouse_id = w.id
 FROM warehouses w
 WHERE i.location = w.name;
 
--- 5. Refactor inventory.location to be the "shelf + column" (actual physical location)
+-- Assign orphans to Main Warehouse
 UPDATE inventory
-SET location = TRIM(BOTH ' ' FROM CONCAT(COALESCE(shelf, ''), ' ', COALESCE(shelf_column, '')));
+SET warehouse_id = (SELECT id FROM warehouses WHERE name = 'Main Warehouse')
+WHERE warehouse_id IS NULL;
+
+-- 5. Refactor inventory.location to be the "shelf + column" (actual physical location)
+-- Only overwrite if shelf/column data exists, otherwise keep the original location string as the location
+UPDATE inventory
+SET location = TRIM(BOTH ' ' FROM CONCAT(COALESCE(shelf, ''), ' ', COALESCE(shelf_column, '')))
+WHERE COALESCE(shelf, '') != '' OR COALESCE(shelf_column, '') != '';
 
 -- 6. Setup indexes
 CREATE INDEX IF NOT EXISTS idx_inventory_warehouse_id ON inventory(warehouse_id);
