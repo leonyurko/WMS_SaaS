@@ -247,6 +247,32 @@ const createInventory = async (data, barcode, codeImages = {}) => {
     );
   }
 
+  // Handle Additional Locations
+  if (data.additionalLocations) {
+    let extras = [];
+    try {
+      extras = typeof data.additionalLocations === 'string'
+        ? JSON.parse(data.additionalLocations)
+        : data.additionalLocations;
+    } catch (e) {
+      console.error('Error parsing additionalLocations for create:', e);
+    }
+
+    if (Array.isArray(extras)) {
+      for (const loc of extras) {
+        if (!loc.warehouseId) continue;
+        // Skip if same as primary (already handled)
+        if (loc.warehouseId === warehouseId) continue;
+
+        await query(
+          `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
+           VALUES ($1, $2, $3, 0)`,
+          [newItem.id, loc.warehouseId, loc.location || '']
+        );
+      }
+    }
+  }
+
   return newItem;
 };
 
