@@ -37,7 +37,8 @@ const WearEquipment = () => {
         severity: 'medium',
         description: '',
         media: [],
-        quantity: 1
+        quantity: 1,
+        selectedWarehouseId: '' // For validation only
     });
 
     useEffect(() => {
@@ -161,11 +162,14 @@ const WearEquipment = () => {
             if (editingId) {
                 await updateWearReport(editingId, {
                     severity: formData.severity,
-                    description: formData.description,
+                    description: formData.description + (formData.selectedWarehouseId ? ` [Warehouse: ${inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name}]` : ''),
                     quantity: formData.quantity
                 });
             } else {
-                await createWearReport(formData);
+                await createWearReport({
+                    ...formData,
+                    description: formData.description + (formData.selectedWarehouseId ? ` [Warehouse: ${inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name}]` : '')
+                });
             }
             setShowModal(false);
             setEditingId(null);
@@ -516,7 +520,15 @@ const WearEquipment = () => {
                                         <input
                                             type="number"
                                             min="1"
-                                            max={inventoryItems.find(i => i.id === formData.inventoryId)?.quantity || 9999}
+                                            max={(() => {
+                                                const item = inventoryItems.find(i => i.id === formData.inventoryId);
+                                                if (!item) return 9999;
+                                                if (formData.selectedWarehouseId) {
+                                                    const loc = item.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId);
+                                                    return loc ? loc.quantity : item.current_stock;
+                                                }
+                                                return item.current_stock;
+                                            })()}
                                             value={formData.quantity}
                                             onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
                                             className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
@@ -524,7 +536,15 @@ const WearEquipment = () => {
                                         />
                                         {formData.inventoryId && (
                                             <span className="text-sm text-gray-500 whitespace-nowrap">
-                                                / {inventoryItems.find(i => i.id === formData.inventoryId)?.quantity || '?'} available
+                                                / {(() => {
+                                                    const item = inventoryItems.find(i => i.id === formData.inventoryId);
+                                                    if (!item) return '?';
+                                                    if (formData.selectedWarehouseId) {
+                                                        const loc = item.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId);
+                                                        return loc ? loc.quantity : item.current_stock;
+                                                    }
+                                                    return item.current_stock;
+                                                })()} available
                                             </span>
                                         )}
                                     </div>
