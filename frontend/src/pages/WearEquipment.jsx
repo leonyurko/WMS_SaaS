@@ -159,16 +159,23 @@ const WearEquipment = () => {
             return;
         }
         try {
+            // Strip existing warehouse tag to prevent duplication
+            const baseDescription = formData.description ? formData.description.replace(/\s*\[Warehouse: .+?\]$/, '') : '';
+            const warehouseName = formData.selectedWarehouseId
+                ? inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name
+                : null;
+            const finalDescription = baseDescription + (warehouseName ? ` [Warehouse: ${warehouseName}]` : '');
+
             if (editingId) {
                 await updateWearReport(editingId, {
                     severity: formData.severity,
-                    description: formData.description + (formData.selectedWarehouseId ? ` [Warehouse: ${inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name}]` : ''),
+                    description: finalDescription,
                     quantity: formData.quantity
                 });
             } else {
                 await createWearReport({
                     ...formData,
-                    description: formData.description + (formData.selectedWarehouseId ? ` [Warehouse: ${inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name}]` : '')
+                    description: finalDescription
                 });
             }
             setShowModal(false);
