@@ -91,15 +91,16 @@ const createWearReport = async (data) => {
     const { inventoryId, severity, description, mediaUrls, reportedBy } = data;
 
     const result = await query(`
-        INSERT INTO wear_equipment (inventory_id, severity, description, media_urls, reported_by)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO wear_equipment (inventory_id, severity, description, media_urls, reported_by, quantity)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
     `, [
         inventoryId,
         severity,
         description || null,
         JSON.stringify(mediaUrls || []),
-        reportedBy
+        reportedBy,
+        data.quantity || 1
     ]);
 
     return result.rows[0];
@@ -124,6 +125,10 @@ const updateWearReport = async (id, data) => {
     if (data.mediaUrls !== undefined) {
         fields.push(`media_urls = $${paramCount++}`);
         values.push(JSON.stringify(data.mediaUrls));
+    }
+    if (data.quantity !== undefined) {
+        fields.push(`quantity = $${paramCount++}`);
+        values.push(data.quantity);
     }
 
     if (fields.length === 0) {

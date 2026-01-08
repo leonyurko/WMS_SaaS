@@ -41,7 +41,7 @@ const getWearReportById = async (req, res) => {
  */
 const createWearReport = async (req, res) => {
     try {
-        const { inventoryId, severity, description } = req.body;
+        const { inventoryId, severity, description, quantity } = req.body;
         const reportedBy = req.user.id;
 
         if (!inventoryId || !severity) {
@@ -56,7 +56,8 @@ const createWearReport = async (req, res) => {
             severity,
             description,
             mediaUrls,
-            reportedBy
+            reportedBy,
+            quantity: quantity ? parseInt(quantity, 10) : 1
         });
 
         res.status(201).json({ message: 'Wear report created successfully', report });
@@ -73,12 +74,13 @@ const createWearReport = async (req, res) => {
 const updateWearReport = async (req, res) => {
     try {
         const { id } = req.params;
-        const { severity, description, mediaUrls } = req.body;
+        const { severity, description, mediaUrls, quantity } = req.body;
 
         const report = await wearEquipmentService.updateWearReport(id, {
             severity,
             description,
-            mediaUrls
+            mediaUrls,
+            quantity: quantity ? parseInt(quantity, 10) : undefined
         });
 
         if (!report) {

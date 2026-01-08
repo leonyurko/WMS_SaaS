@@ -36,7 +36,8 @@ const WearEquipment = () => {
         inventoryId: '',
         severity: 'medium',
         description: '',
-        media: []
+        media: [],
+        quantity: 1
     });
 
     useEffect(() => {
@@ -55,7 +56,7 @@ const WearEquipment = () => {
                     const data = await fetchInventory({ search: itemName || '' });
                     const items = data?.items || [];
                     setInventoryItems(items);
-                    setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [] });
+                    setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [], quantity: 1 });
                     setShowModal(true);
                     // Clear URL params
                     setSearchParams({});
@@ -125,7 +126,7 @@ const WearEquipment = () => {
 
     const handleOpenModal = async () => {
         await loadInventory();
-        setFormData({ inventoryId: '', severity: 'medium', description: '', media: [] });
+        setFormData({ inventoryId: '', severity: 'medium', description: '', media: [], quantity: 1 });
         setEditingId(null);
         setShowModal(true);
     };
@@ -136,7 +137,8 @@ const WearEquipment = () => {
             inventoryId: report.inventory_id,
             severity: report.severity,
             description: report.description || '',
-            media: [] // Media update not supported in this form
+            media: [], // Media update not supported in this form
+            quantity: report.quantity || 1
         });
         setEditingId(report.id);
         setShowModal(true);
@@ -144,7 +146,7 @@ const WearEquipment = () => {
 
     const handleOpenModalWithItem = async (itemId, itemName) => {
         const items = await loadInventory(itemName || '');
-        setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [] });
+        setFormData({ inventoryId: itemId, severity: 'medium', description: '', media: [], quantity: 1 });
         setInventoryItems(items);
         setShowModal(true);
     };
@@ -159,7 +161,8 @@ const WearEquipment = () => {
             if (editingId) {
                 await updateWearReport(editingId, {
                     severity: formData.severity,
-                    description: formData.description
+                    description: formData.description,
+                    quantity: formData.quantity
                 });
             } else {
                 await createWearReport(formData);
@@ -372,6 +375,9 @@ const WearEquipment = () => {
                                         <div>
                                             <div className="flex items-center space-x-2 mb-1">
                                                 <h3 className="font-semibold text-gray-800">{report.item_name}</h3>
+                                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
+                                                    Qty: {report.quantity || 1}
+                                                </span>
                                                 {getSeverityBadge(report.severity)}
                                                 {getStatusBadge(report.status)}
                                             </div>
@@ -603,7 +609,10 @@ const WearEquipment = () => {
                                 {/* Description */}
                                 <div className="mb-4">
                                     <h4 className="font-medium text-gray-700 mb-1">Description</h4>
-                                    <p className="text-gray-600">{selectedReport.description || 'No description provided'}</p>
+                                    <p className="text-gray-600 mb-2">{selectedReport.description || 'No description provided'}</p>
+                                    <div className="text-sm text-gray-500">
+                                        Quantity affected: <span className="font-medium text-gray-800">{selectedReport.quantity || 1}</span>
+                                    </div>
                                 </div>
 
                                 {/* Reporter Info */}
