@@ -266,8 +266,8 @@ const createInventory = async (data, barcode, codeImages = {}) => {
 
         await query(
           `INSERT INTO item_warehouses (inventory_id, warehouse_id, quantity, location)
-           VALUES ($1, $2, $3, 0)`,
-          [newItem.id, loc.warehouseId, loc.location || '']
+           VALUES ($1, $2, $3, $4)`,
+          [newItem.id, loc.warehouseId, 0, loc.location || '']
         );
       }
     }
