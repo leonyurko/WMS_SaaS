@@ -507,6 +507,29 @@ const WearEquipment = () => {
                                     </select>
                                 </div>
 
+                                {/* Quantity */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantity *
+                                    </label>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={inventoryItems.find(i => i.id === formData.inventoryId)?.quantity || 9999}
+                                            value={formData.quantity}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-red"
+                                            required
+                                        />
+                                        {formData.inventoryId && (
+                                            <span className="text-sm text-gray-500 whitespace-nowrap">
+                                                / {inventoryItems.find(i => i.id === formData.inventoryId)?.quantity || '?'} available
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Description */}
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
