@@ -132,14 +132,34 @@ const WearEquipment = () => {
         setShowModal(true);
     };
 
+    const parseDescription = (desc) => {
+        if (!desc) return { cleanDescription: '', warehouseName: null };
+        const warehouseMatch = desc.match(/\[Warehouse: ([^\]]+)\]/);
+        const warehouseName = warehouseMatch ? warehouseMatch[1] : null;
+        const cleanDescription = desc.replace(/\[Warehouse: [^\]]+\]/g, '').trim();
+        return { cleanDescription, warehouseName };
+    };
+
     const handleEdit = async (report) => {
-        await loadInventory(); // Ensure items are loaded to show the name (though we might disable select)
+        const items = await loadInventory();
+        const { cleanDescription, warehouseName } = parseDescription(report.description);
+
+        let warehouseId = '';
+        if (warehouseName) {
+            const item = items.find(i => i.id === report.inventory_id);
+            if (item && item.stock_locations) {
+                const loc = item.stock_locations.find(l => l.warehouse_name === warehouseName);
+                if (loc) warehouseId = loc.warehouse_id;
+            }
+        }
+
         setFormData({
             inventoryId: report.inventory_id,
             severity: report.severity,
-            description: report.description || '',
-            media: [], // Media update not supported in this form
-            quantity: report.quantity || 1
+            description: cleanDescription,
+            media: [],
+            quantity: report.quantity || 1,
+            selectedWarehouseId: warehouseId
         });
         setEditingId(report.id);
         setShowModal(true);
@@ -159,12 +179,12 @@ const WearEquipment = () => {
             return;
         }
         try {
-            // Strip existing warehouse tag to prevent duplication
-            const baseDescription = formData.description ? formData.description.replace(/\s*\[Warehouse: .+?\]$/, '') : '';
+            // Ensure no duplicate tags in final description
+            const cleanDesc = formData.description ? formData.description.replace(/\[Warehouse: [^\]]+\]/g, '').trim() : '';
             const warehouseName = formData.selectedWarehouseId
                 ? inventoryItems.find(i => i.id === formData.inventoryId)?.stock_locations?.find(l => l.warehouse_id === formData.selectedWarehouseId)?.warehouse_name
                 : null;
-            const finalDescription = baseDescription + (warehouseName ? ` [Warehouse: ${warehouseName}]` : '');
+            const finalDescription = cleanDesc + (warehouseName ? ` [Warehouse: ${warehouseName}]` : '');
 
             if (editingId) {
                 await updateWearReport(editingId, {
@@ -389,11 +409,20 @@ const WearEquipment = () => {
                                                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
                                                     Qty: {report.quantity || 1}
                                                 </span>
+                                                {(() => {
+                                                    const { warehouseName } = parseDescription(report.description);
+                                                    return warehouseName ? (
+                                                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200 font-medium">
+                                                            <i className="fas fa-warehouse mr-1 text-xs"></i>
+                                                            {warehouseName}
+                                                        </span>
+                                                    ) : null;
+                                                })()}
                                                 {getSeverityBadge(report.severity)}
                                                 {getStatusBadge(report.status)}
                                             </div>
                                             <p className="text-sm text-gray-600 mb-1">
-                                                {report.description || 'No description provided'}
+                                                {parseDescription(report.description).cleanDescription || 'No description provided'}
                                             </p>
                                             <div className="text-xs text-gray-500">
                                                 <span>Reported by {report.reported_by_username}</span>
